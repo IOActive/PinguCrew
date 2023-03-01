@@ -1,0 +1,10 @@
+Flask
+Flask_Security
+mongoengine
+pika
+pymongo
+python_dateutil
+email_validator
+flask_mongoengine
+flask_swagger_ui
+flasgger
