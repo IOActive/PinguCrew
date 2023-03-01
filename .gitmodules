@@ -1,0 +1,9 @@
+[submodule "src/pingubot"]
+	path = src/pingubot
+	url = ssh://git@doopelab.mad:30001/development/pingubot.git
+[submodule "src/--force"]
+	path = src/--force
+	url = ssh://git@doopelab.mad:30001/development/pingubot.git
+[submodule "src/bot"]
+	path = src/bot
+	url = ssh://git@doopelab.mad:30001/development/pingubot.git
