@@ -1,0 +1,140 @@
+# Copyright 2019 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+blobs:
+  # Bucket to store blobs, e.g. testcases, fuzzer archives, etc.
+  bucket: test-blobs-bucket
+
+deployment:
+  # Bucket to store deployment artifacts, e.g. source archives, etc.
+  bucket: test-deployment-bucket
+
+bigquery:
+  # Bucket to store bigquery artifacts, e.g. crash stats, etc.
+  bucket: test-bigquery-bucket
+
+backup:
+  # Bucket to store backup artifacts, e.g. datastore data (backup cron), etc.
+  bucket: test-backup-bucket
+
+coverage:
+  reports:
+    # Bucket to load code coverage information from.
+    bucket: test-coverage-bucket
+
+logs:
+  fuzzer:
+    # Bucket to store logs for fuzzer runs.
+    bucket: test-fuzzer-logs-bucket
+
+monitoring:
+  # Flag to indicate if Stackdriver monitoring is enabled or not (disabled by default).
+  enabled: false
+
+firebase:
+  # API key for Firebase (public).
+  api_key: firebase-api-key
+  # auth_domain: login.custom-domain.com
+
+stacktrace:
+  # Stack frames to ignore when determining the crash signature.
+  stack_frame_ignore_regexes:
+
+  # Stacks to ignore from being considered as a crash altogether.
+  stack_blacklist_regexes:
+
+# Suffix to append to automatically created buckets.
+# bucket_domain_suffix: bucket.suffix
+
+env:
+  # Application ID for the Google Cloud Project. In production, this will have a s~ prefix.
+  APPLICATION_ID: test-bot
+
+  # Default project name unless overridden in a job definition.
+  PROJECT_NAME: test-project
+
+  # Default bucket to store corpus / useful testcases found during fuzzing. This has sub-directories
+  # for each fuzzer, but not for jobs. So, unless you override this in a job definition, a fuzzer
+  # across different jobs share the same corpus (e.g. useful for different fuzzing engines to
+  # cross-pollinate the corpus).
+  CORPUS_BUCKET: test-corpus-bucket
+
+  # Default bucket to store minimized corpus for various fuzzers. Once a day, corpus pruning task
+  # minimizes the current corpus in CORPUS_BUCKET and then archives it in this bucket. You can
+  # customize it to be different from the backup bucket above if you want separation from other
+  # backup items like datastore backups, etc.
+  BACKUP_BUCKET: test-backup-bucket
+
+  # Default bucket to store quarantined corpus items. These items prevent fuzzer from making
+  # progress during fuzzing (e.g. crashes, timeout, etc), so we automatically quarantine them once
+  # they sneak into the corpus somehow. Once the bugs are fixed, items from quarantine are brought
+  # back into the main corpus bucket.
+  QUARANTINE_BUCKET: test-quarantine-bucket
+
+  # Default bucket to store shared corpus across all job types. This is planned for future cross
+  # pollination with other data sources on the web.
+  SHARED_CORPUS_BUCKET: test-shared-corpus-bucket
+
+  # Default bucket to store fuzzing logs from testcase runs. This is different from the fuzzer logs
+  # above which logs the fuzzer run that generates the testcases, whereas this one logs the run of
+  # the testcases against the target application.
+  FUZZ_LOGS_BUCKET: test-fuzz-logs-bucket
+
+  # Default bucket to store mutator plugins.
+  MUTATOR_PLUGINS_BUCKET: test-mutator-plugins-bucket
+
+  # Bucket to store blobs, e.g. testcases, fuzzer archives, etc.
+  BLOBS_BUCKET: test-blobs-bucket
+
+  # Bucket to store bigquery artifacts, e.g. crash stats, etc.
+  BIGQUERY_BUCKET: test-bigquery-bucket
+
+  # Bucket to store deployment artifacts, e.g. source archives, etc.
+  DEPLOYMENT_BUCKET: test-deployment-bucket
+
+  # Bucket to load code coverage information from.
+  COVERAGE_BUCKET: test-coverage-bucket
+
+  # Specify either a HELP_URL or HELP_FORMAT for guiding developers on how to fix bugs.
+  # HELP_URL: help-page-for-reproducing-bugs
+  # HELP_FORMAT: help-template-for-reproducing-bugs, supports variables such as:
+  #              %PROJECT%, %TESTCASE%, %FUZZER_NAME%, %FUZZ_TARGET%, %ENGINE%,
+  #              %SANITIZER%, %SANITIZER_OPTIONS%, %ARGS%,
+  #              which get automatically subsituted in the template.
+  #              Make sure to unicode-escape the string, e.g. \n becomes \\n, etc.
+
+  # Default issue tracker name unless overridden in a job definition. Current only supports monorail
+  # issue tracker (disabled by default).
+  # ISSUE_TRACKER: issue-tracker-name
+
+  # Web tests (e.g. html, js tests) to automatically download once a day and provide a default
+  # input to fuzzer as part of --input-dir argument (disabled by default).
+  # WEB_TESTS_URL: 'gs://bucket/path-to-tests-archive.zip'
+  # UPDATE_WEB_TESTS: true
+
+  # Points to a source map json file containing component revisions for this app revision. This is
+  # used to know which components changed in a particular regression range.
+  # Read more about it here:
+  # https://google.github.io/clusterfuzz/production-setup/build-pipeline/#providing-revisions-for-the-build-dependencies
+  # REVISION_VARS_URL:
+
+  # Any of the above variables can be overridden in a job definition.
+
+# Pub/Sub topic for a custom bisection service.
+#bisect_service:
+  #pubsub_topic: projects/test-project/topics/bisection
+
+# Pub/Sub topic for receiving issue updates.
+#issue_updates:
+  #pubsub_topic: projects/test-project/topics/issue-updates

@@ -1,0 +1,3 @@
+[submodule "src/bot"]
+	path = src/bot
+	url = ssh://git@doopelab.mad:30001/development/pingubot.git
