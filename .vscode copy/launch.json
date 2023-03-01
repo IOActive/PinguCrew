@@ -1,0 +1,59 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Butler Run Bot",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "run_bot",
+                "-c",
+                "configs/test",
+                "test-bot"
+            ],
+            "cwd": "${workspaceRoot}",
+            "env": {
+                "PYTHONPATH": "${workspaceRoot}:${workspaceRoot}/src:${workspaceRoot}/tests:${workspaceRoot}/src/bot"
+            },
+        },
+        {
+            "name": "Buttler Unitest",
+            "type": "python",
+            "request": "launch",
+            "program": "butler.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceRoot}",
+            "env": {
+                "PYTHONPATH": "${workspaceRoot}:${workspaceRoot}/src:${workspaceRoot}/tests:${workspaceRoot}/src/bot"
+            },
+            "args": [
+                "py_unittest",
+                "-c",
+                "configs/test",
+                "-t",
+                "core",
+                "-p",
+                "fuzz_task_test.py"
+            ]
+        },
+        {
+            "name": "Frontend",
+            "type": "python",
+            "request": "launch",
+            "program": "src/frontend/pingucrew_frontend.py",
+            "justMyCode": true,
+            "console": "integratedTerminal",
+            "cwd": "${workspaceRoot}",
+            "env": {
+                "PYTHONPATH": "${workspaceRoot}:${workspaceRoot}/src:${workspaceRoot}${workspaceRoot}/tests:${workspaceRoot}/src/frontend"
+            }
+        },
+    ]
+}
