@@ -42,7 +42,7 @@ History
 @Lucretiel
 160 lines (131 sloc) 3.01 KB
 # Byte-compiled / optimized / DLL files
-__pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 
