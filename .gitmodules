@@ -1,3 +1,9 @@
 [submodule "src/bot"]
 	path = src/bot
 	url = ssh://git@doopelab.mad:30001/development/pingubot.git
+[submodule "src/frontend"]
+	path = src/frontend
+	url = ssh://git@doopelab.mad:30001/development/PinguLab/pingureactfrontend.git
+[submodule "src/backend"]
+	path = src/backend
+	url = ssh://git@doopelab.mad:30001/development/PinguLab/pingubackend.git
