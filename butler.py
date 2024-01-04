@@ -29,7 +29,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 # guard needs to be at the top because it checks Python dependecies.
-from local.butler import guard
+from src.local.butler import guard
 
 guard.check()
 
@@ -302,8 +302,12 @@ def main():
         return
 
     _setup()
-    command = importlib.import_module('local.butler.%s' % args.command)
-    command.execute(args)
+    if args.command == "run_bot":
+        command = importlib.import_module('bot.src.local.butler.%s' % args.command)
+        command.execute(args)
+    else:
+        command = importlib.import_module('local.butler.%s' % args.command)
+        command.execute(args)
 
 
 def _setup():
