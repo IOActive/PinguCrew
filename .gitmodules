@@ -1,12 +1,12 @@
 [submodule "src/bot"]
-	path = src/bot
+	path = src/pingubot
 	url = ssh://git@doopelab.mad:30001/development/PinguLab/pingubot.git
 	branch = master
 [submodule "src/frontend"]
-	path = src/frontend
+	path = src/pingufrontend
 	url = ssh://git@doopelab.mad:30001/development/PinguLab/pingureactfrontend.git
 	branch = master
-[submodule "src/backend"]
+[submodule "src/pingubackend"]
 	path = src/backend
 	url = ssh://git@doopelab.mad:30001/development/PinguLab/pingubackend.git
 	branch = master

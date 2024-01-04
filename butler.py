@@ -301,22 +301,26 @@ def main():
         parser.print_help()
         return
 
-    _setup()
     if args.command == "run_bot":
-        command = importlib.import_module('bot.src.local.butler.%s' % args.command)
-        command.execute(args)
+        _setup(submodule_root="src/bot")
     else:
-        command = importlib.import_module('local.butler.%s' % args.command)
-        command.execute(args)
+        _setup()
+
+    command = importlib.import_module('local.butler.%s' % args.command)
+    command.execute(args)
 
 
-def _setup():
+def _setup(submodule_root=None):
     """Set up configs and import paths."""
-    os.environ['ROOT_DIR'] = os.path.abspath('.')
+    if submodule_root:
+        os.environ['ROOT_DIR'] = os.path.abspath(f'./{submodule_root}')
+    else:
+        os.environ['ROOT_DIR'] = os.path.abspath('.')
+
     os.environ['PYTHONIOENCODING'] = 'UTF-8'
 
     sys.path.insert(0, os.path.abspath(os.path.join('src')))
-    from bot.system import modules
+    from src.bot.src.bot.system import modules
     modules.fix_module_search_paths()
 
 
