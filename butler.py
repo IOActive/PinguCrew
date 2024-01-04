@@ -304,11 +304,12 @@ def main():
 
     if args.command == "run_bot":
         _setup(submodule_root="src/pingubot")
+        command = importlib.import_module('local.butler.%s' % args.command)
+        command.execute(args)
     else:
         _setup()
-
-    command = importlib.import_module('local.butler.%s' % args.command)
-    command.execute(args)
+        command = importlib.import_module('local.butler.%s' % args.command)
+        command.execute(args)
 
 
 def _setup(submodule_root=None):
