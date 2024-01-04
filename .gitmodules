@@ -3,7 +3,7 @@
 	url = ssh://git@doopelab.mad:30001/development/PinguLab/pingubot.git
 	branch = master
 [submodule "src/pingureactfrontend"]
-	path = src/pingufrontend
+	path = src/pingureactfrontend
 	url = ssh://git@doopelab.mad:30001/development/PinguLab/pingureactfrontend.git
 	branch = master
 [submodule "src/pingubackend"]
