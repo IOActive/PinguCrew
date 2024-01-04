@@ -215,6 +215,7 @@ def main():
         '--android-serial',
         help='Serial number of an Android device to connect to instead of '
              'running normally.')
+    parser_run_bot.add_argument('--testing', dest='testing', action='store_true')
 
     parser_remote = subparsers.add_parser(
         'remote', help=('Run command-line tasks on a remote bot.'))
@@ -302,7 +303,7 @@ def main():
         return
 
     if args.command == "run_bot":
-        _setup(submodule_root="src/bot")
+        _setup(submodule_root="src/pingubot")
     else:
         _setup()
 
@@ -320,7 +321,7 @@ def _setup(submodule_root=None):
     os.environ['PYTHONIOENCODING'] = 'UTF-8'
 
     sys.path.insert(0, os.path.abspath(os.path.join('src')))
-    from src.bot.src.bot.system import modules
+    from src.pingubot.src.bot.system import modules
     modules.fix_module_search_paths()
 
 
