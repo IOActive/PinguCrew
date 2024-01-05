@@ -302,7 +302,7 @@ def main():
         parser.print_help()
         return
 
-    if args.command == "run_bot":
+    if args.command == "run_bot" or args.command == "deploy":
         _setup(submodule_root="src/pingubot")
         command = importlib.import_module('local.butler.%s' % args.command)
         command.execute(args)

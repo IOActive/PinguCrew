@@ -22,7 +22,7 @@ def execute(args):
     """Install all required dependencies for running tests, the appengine,
     and the bot."""
     is_reproduce_tool_setup = args.only_reproduce
-    #common.install_dependencies(is_reproduce_tool_setup=is_reproduce_tool_setup)
+    common.install_dependencies(is_reproduce_tool_setup=is_reproduce_tool_setup)
 
     # App engine setup is not needed for the reproduce tool.
     if not is_reproduce_tool_setup:

@@ -125,7 +125,7 @@ def execute_async(command, extra_environments=None, cwd=None):
         environments.update(extra_environments)
 
     return subprocess.Popen(
-        command,
+        ['/bin/bash', '-c', command],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env=environments,
@@ -228,15 +228,20 @@ def _pip():
 
 def _install_pip(requirements_path, target_path):
     """Perform pip install using requirements_path onto target_path."""
+    if not os.path.exists(requirements_path):
+        raise Exception('Requeriements file not found: %s.' % requirements_path) 
     if os.path.exists(target_path):
         shutil.rmtree(target_path)
 
-    execute(
-        '{pip} install -r {requirements_path} --upgrade --target {target_path}'.
-            format(
-            pip=_pip(),
-            requirements_path=requirements_path,
-            target_path=target_path))
+    try:
+        execute(
+            '{pip} install -r {requirements_path} --upgrade --target {target_path}'.
+                format(
+                pip=_pip(),
+                requirements_path=requirements_path,
+                target_path=target_path), cwd=os.environ['ROOT_DIR'])
+    except Exception as e:
+        print(f"Pip command excution erros: {e}")
 
 
 def _install_platform_pip(requirements_path, target_path, platform_name):
@@ -289,26 +294,26 @@ def _remove_invalid_files():
 
 def install_dependencies(platform_name=None, is_reproduce_tool_setup=False):
     """Install dependencies for bots."""
-    _install_pip('src/bot/requirements.txt', 'src/third_party')
+    with tempfile.NamedTemporaryFile() as f:
+        f.write(open('src/pingubot/requirements.txt', 'rb').read())
+        f.flush()
+
+        _install_pip(f.name, 'src/pingubot/third_party')
+
     if platform_name:
         _install_platform_pip(
             'src/platform_requirements.txt',
             'src/third_party',
             platform_name=platform_name)
 
-    with tempfile.NamedTemporaryFile() as f:
-        f.write(open('src/requirements.txt', 'rb').read())
-        f.write(open('src/frontend/requirements.txt', 'rb').read())
-        f.flush()
-
-        _install_pip(f.name, 'src/frontend/third_party')
+    """Install dependencies for Backend."""
 
     with tempfile.NamedTemporaryFile() as f:
-        f.write(open('src/requirements.txt', 'rb').read())
         f.write(open('src/backend/requirements.txt', 'rb').read())
         f.flush()
 
         _install_pip(f.name, 'src/backend/third_party')
+
 
     # Only the previous dependencies are needed for reproduce tool installation.
     if is_reproduce_tool_setup:

@@ -31,6 +31,17 @@
                 "-c",
                 "configs/test",
             ]
-        }
+        },
+        {
+            "name": "Python: Run Bootstrap",
+            "type": "python",
+            "request": "launch",
+            "program": "butler.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "bootstrap",
+            ]
+        },
     ]
 }

@@ -27,8 +27,8 @@ from local.butler import appengine
 from local.butler import common
 from local.butler import constants
 from local.butler import package
-from src.bot.config import local_config
-from src.bot.system import environment
+from src.config import local_config
+from src.pingubot.src.bot.system import environment
 
 EXPECTED_BOT_COUNT_PERCENT = 0.8
 
