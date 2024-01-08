@@ -298,7 +298,7 @@ def install_dependencies(platform_name=None, is_reproduce_tool_setup=False):
         f.write(open('src/pingubot/requirements.txt', 'rb').read())
         f.flush()
 
-        _install_pip(f.name, 'src/pingubot/third_party')
+        _install_pip(f.name, 'pingubot/third_party')
 
     if platform_name:
         _install_platform_pip(
@@ -312,7 +312,11 @@ def install_dependencies(platform_name=None, is_reproduce_tool_setup=False):
         f.write(open('src/backend/requirements.txt', 'rb').read())
         f.flush()
 
-        _install_pip(f.name, 'src/backend/third_party')
+        _install_pip(f.name, 'backend/third_party')
+
+    """Install dependencies for Frontend."""
+    #TODO: JS dependecies install
+
 
 
     # Only the previous dependencies are needed for reproduce tool installation.

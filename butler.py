@@ -24,7 +24,9 @@
 import argparse
 import importlib
 import os
+import subprocess
 import sys
+import venv
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
@@ -302,29 +304,24 @@ def main():
         parser.print_help()
         return
 
-    if args.command == "run_bot" or args.command == "deploy":
-        _setup(submodule_root="src/pingubot")
-        command = importlib.import_module('local.butler.%s' % args.command)
-        command.execute(args)
-    else:
-        _setup()
-        command = importlib.import_module('local.butler.%s' % args.command)
-        command.execute(args)
+    submodule_root=""
+    if args.command == "run_bot":
+        submodule_root="pingubot"
+
+    _setup(submodule_root)
+    command = importlib.import_module(f'local.butler.{args.command}')
+    command.execute(args)
 
 
-def _setup(submodule_root=None):
+def _setup(submodule_root=""):
     """Set up configs and import paths."""
-    if submodule_root:
-        os.environ['ROOT_DIR'] = os.path.abspath(f'./{submodule_root}')
-    else:
-        os.environ['ROOT_DIR'] = os.path.abspath('.')
 
+    os.environ['ROOT_DIR'] = os.path.abspath(f'./src/{submodule_root}')
     os.environ['PYTHONIOENCODING'] = 'UTF-8'
 
     sys.path.insert(0, os.path.abspath(os.path.join('src')))
     from src.pingubot.src.bot.system import modules
-    modules.fix_module_search_paths()
-
+    modules.fix_module_search_paths(submodule_root)
 
 if __name__ == '__main__':
     main()
