@@ -18,6 +18,7 @@ import datetime
 import io
 import os
 import platform
+import shlex
 import shutil
 import subprocess
 import sys
@@ -129,14 +130,15 @@ def execute_async(command, extra_environments=None, cwd=None):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env=environments,
-        cwd=cwd
-    )
+        cwd=cwd,
+        )
 
 
 def execute(command,
             print_output=True,
             exit_on_error=True,
             extra_environments=None,
+            shell=False,
             cwd=None):
     """Execute a bash command."""
 
@@ -227,15 +229,14 @@ def _pip():
 
 def _install_npm(requirements_path, target_path):
     """Perform npm install using requirements_path onto target_path."""
-    if not os.path.exists(f"{requirements_path}"):
+    if not os.path.exists(f"src/{requirements_path}"):
         raise Exception('Requeriements file not found: %s.' % requirements_path) 
-    if os.path.exists(f"{target_path}/node_modules"):
-        shutil.rmtree(f"{target_path}/node_modules")
+    if os.path.exists(f"src/{target_path}/node_modules"):
+        shutil.rmtree(f"src/{target_path}/node_modules")
 
     try:
-        execute(
-            f'npm install --prefix {target_path} {requirements_path} '
-            ,cwd=os.environ['ROOT_DIR'])
+        command = ['/bin/bash', '-c', f'npm install --prefix src/{target_path} src/{requirements_path} ']
+        execute(command, cwd=os.environ['ROOT_DIR'])
     except Exception as e:
         print(f"npm command excution erros: {e}")
     
@@ -247,12 +248,12 @@ def _install_pip(requirements_path, target_path):
         shutil.rmtree(target_path)
 
     try:
-        execute(
-            '{pip} install -r {requirements_path} --upgrade --target {target_path}'.
-                format(
+        command =['/bin/bash', '-c', '{pip} install -r {requirements_path} --upgrade --target {target_path}'.format(
                 pip=_pip(),
                 requirements_path=requirements_path,
-                target_path=target_path), cwd=os.environ['ROOT_DIR'])
+                target_path=target_path)]
+                
+        execute(command, cwd=os.environ['ROOT_DIR'])
     except Exception as e:
         print(f"Pip command excution erros: {e}")
 
@@ -327,7 +328,7 @@ def install_dependencies(platform_name=None, is_reproduce_tool_setup=False):
 
     """Install dependencies for Frontend."""
     #TODO: JS dependecies install
-    _install_npm("src/frontend", "src/frontend")
+    _install_npm("frontend", "frontend")
 
 
 

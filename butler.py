@@ -304,7 +304,7 @@ def main():
         parser.print_help()
         return
 
-    submodule_root=''
+    submodule_root=None
 
     if args.command == "run_bot":
         submodule_root="pingubot"
@@ -315,10 +315,15 @@ def main():
         config_dir = os.getenv('CONFIG_DIR_OVERRIDE', constants.TEST_CONFIG_DIR)
         common.symlink(src=config_dir, target=os.path.join('src/pingubot', 'config'))
         os.environ['CONFIG_DIR_OVERRIDE'] = os.path.join('src/pingubot', 'config')
-                
-    else:
+
+    elif args.command == "run_server":
+        submodule_root='backend'
         _setup(submodule_root)
         sys.path.insert(0, os.path.abspath(os.path.join('src/pingubot/src/')))
+        command = importlib.import_module(f'src.local.butler.{args.command}')
+
+    else:
+        _setup(submodule_root)
         command = importlib.import_module(f'src.local.butler.{args.command}')
 
     command.execute(args)

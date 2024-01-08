@@ -22,7 +22,7 @@ from pingubot.src.bot.config import local_config
 from src.local.butler import appengine
 from src.local.butler import common
 from src.local.butler import constants
-from backend.PinguApi.utils.MinioManager import MinioManger
+from pingubot.src.bot.datastore.storage import MinioProvider
 
 
 def bootstrap_db():
@@ -52,12 +52,12 @@ def create_local_bucket(local_gcs_buckets_path, name):
 def bootstrap_buckets():
   """Bootstrap GCS."""
   test_blobs_bucket = os.environ.get('TEST_BLOBS_BUCKET')
-  provider = MinioManger()
+  provider = MinioProvider()
 
   if test_blobs_bucket:
-    provider.crearteBucket(test_blobs_bucket)
+    provider.create_bucket(test_blobs_bucket)
   else:
-    provider.crearteBucket(os.environ.get('blobs.bucket'))
+    provider.create_bucket(os.environ.get('BLOBS_BUCKET'))
 
   '''
   create_local_bucket(local_buckets_path, os.environ.get('deployment.bucket'))
@@ -116,8 +116,7 @@ def start_cron_threads():
 
 def execute(args):
   """Run the server."""
-  os.environ['LOCAL_DEVELOPMENT'] = 'True'
-  common.kill_leftover_emulators()
+  #os.environ['LOCAL_DEVELOPMENT'] = 'True'
 
   if not args.skip_install_deps:
     common.install_dependencies()
@@ -137,7 +136,7 @@ def execute(args):
 
   # Run Bucket server, redis and mongo DB
 
-  docker_compose = common.execute('docker-compose up database queue minio')
+  docker_compose = common.execute_async(['/bin/bash', '-c', 'docker-compose up database queue minio'])
 
   # Set up local buckets and symlinks.
   bootstrap_buckets()
