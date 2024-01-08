@@ -42,44 +42,36 @@ def bootstrap_db():
   thread.start()
 
 
-def create_local_bucket(local_gcs_buckets_path, name):
+def create_minio_bucket(provider, name):
   """Create a local bucket."""
-  blobs_bucket = os.path.join(local_gcs_buckets_path, name)
-  if not os.path.exists(blobs_bucket):
-    os.mkdir(blobs_bucket)
+  try:
+      provider.create_bucket(name)
+  except Exception as e:
+      print(f'{e}')
 
 
-def bootstrap_buckets():
+def bootstrap_buckets(config):
   """Bootstrap GCS."""
   test_blobs_bucket = os.environ.get('TEST_BLOBS_BUCKET')
   provider = MinioProvider()
 
+
   if test_blobs_bucket:
-    provider.create_bucket(test_blobs_bucket)
+    create_minio_bucket(provider, test_blobs_bucket)
   else:
-    provider.create_bucket(os.environ.get('BLOBS_BUCKET'))
+    create_minio_bucket(provider, config.get('blobs.bucket'))
 
-  '''
-  create_local_bucket(local_buckets_path, os.environ.get('deployment.bucket'))
-  create_local_bucket(local_buckets_path, os.environ.get('bigquery.bucket'))
-  create_local_bucket(local_buckets_path, os.environ.get('backup.bucket'))
-  create_local_bucket(local_buckets_path, os.environ.get('logs.fuzzer.bucket'))
-  create_local_bucket(local_buckets_path, os.environ.get('env.CORPUS_BUCKET'))
-  create_local_bucket(local_buckets_path,
-                      os.environ.get('env.QUARANTINE_BUCKET'))
-  create_local_bucket(local_buckets_path,
-                      os.environ.get('env.SHARED_CORPUS_BUCKET'))
-  create_local_bucket(local_buckets_path,
-                      os.environ.get('env.FUZZ_LOGS_BUCKET'))
-  create_local_bucket(local_buckets_path,
-                      os.environ.get('env.MUTATOR_PLUGINS_BUCKET'))
+  create_minio_bucket(provider, config.get('deployment.bucket'))
+  create_minio_bucket(provider, config.get('bigquery.bucket'))
+  create_minio_bucket(provider, config.get('backup.bucket'))
+  create_minio_bucket(provider, config.get('logs.fuzzer.bucket'))
+  create_minio_bucket(provider, config.get('env.CORPUS_BUCKET'))
+  create_minio_bucket(provider, config.get('env.QUARANTINE_BUCKET'))
+  create_minio_bucket(provider, config.get('env.SHARED_CORPUS_BUCKET'))
+  create_minio_bucket(provider, config.get('env.FUZZ_LOGS_BUCKET'))
+  
 
-  # Symlink local bucket path to appengine src dir to bypass sandboxing
-  # issues.
-  common.symlink(
-      src=local_buckets_path,
-      target=os.path.join(appengine.SRC_DIR_PY, 'local_buckets'))
-  '''
+  
 
 def start_cron_threads():
   """Start threads to trigger essential cron jobs."""
@@ -132,14 +124,16 @@ def execute(args):
   #if not os.path.exists(args.storage_path):
   #  os.makedirs(args.storage_path)
 
-  config = local_config.ProjectConfig().set_environment()
+  config = local_config.ProjectConfig()
+
+  config.set_environment()
 
   # Run Bucket server, redis and mongo DB
 
   docker_compose = common.execute_async(['/bin/bash', '-c', 'docker-compose up database queue minio'])
 
   # Set up local buckets and symlinks.
-  bootstrap_buckets()
+  bootstrap_buckets(config)
 
   # Start our custom GCS emulator.
   local_gcs = common.execute_async(
