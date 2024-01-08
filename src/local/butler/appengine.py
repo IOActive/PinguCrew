@@ -21,7 +21,7 @@ import sys
 from local.butler import common
 from local.butler import constants
 
-SRC_DIR_PY = os.path.join('src', 'frontend')
+SRC_DIR_PY = os.path.join('src', 'backend')
 
 
 def _add_env_vars_if_needed(yaml_path, additional_env_vars):

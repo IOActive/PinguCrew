@@ -125,7 +125,7 @@ def execute_async(command, extra_environments=None, cwd=None):
         environments.update(extra_environments)
 
     return subprocess.Popen(
-        ['/bin/bash', '-c', command],
+        command,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         env=environments,
@@ -227,10 +227,10 @@ def _pip():
 
 def _install_npm(requirements_path, target_path):
     """Perform npm install using requirements_path onto target_path."""
-    if not os.path.exists(f"src/{requirements_path}"):
+    if not os.path.exists(f"{requirements_path}"):
         raise Exception('Requeriements file not found: %s.' % requirements_path) 
-    if os.path.exists(f"src/{target_path}/node_modules"):
-        shutil.rmtree(f"src/{target_path}/node_modules")
+    if os.path.exists(f"{target_path}/node_modules"):
+        shutil.rmtree(f"{target_path}/node_modules")
 
     try:
         execute(
@@ -310,7 +310,7 @@ def install_dependencies(platform_name=None, is_reproduce_tool_setup=False):
     with tempfile.NamedTemporaryFile() as f:
         f.write(open('src/pingubot/requirements.txt', 'rb').read())
         f.flush()
-        _install_pip(f.name, 'pingubot/third_party')
+        _install_pip(f.name, 'src/pingubot/third_party')
 
     if platform_name:
         _install_platform_pip(
@@ -323,11 +323,11 @@ def install_dependencies(platform_name=None, is_reproduce_tool_setup=False):
     with tempfile.NamedTemporaryFile() as f:
         f.write(open('src/backend/requirements.txt', 'rb').read())
         f.flush()
-        _install_pip(f.name, 'backend/third_party')
+        _install_pip(f.name, 'src/backend/third_party')
 
     """Install dependencies for Frontend."""
     #TODO: JS dependecies install
-    _install_npm("frontend", "frontend")
+    _install_npm("src/frontend", "src/frontend")
 
 
 
@@ -403,9 +403,6 @@ def test_bucket(env_var):
 
 def kill_leftover_emulators():
     """Kill leftover instances of cloud emulators and dev_appserver."""
-    kill_process('dev_appserver.py')
-    kill_process('CloudDatastore.jar')
-    kill_process('pubsub-emulator')
     kill_process('run_bot')
 
 

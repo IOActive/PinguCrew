@@ -1,17 +1,3 @@
-# Copyright 2019 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 blobs:
   # Bucket to store blobs, e.g. testcases, fuzzer archives, etc.
   bucket: test-blobs-bucket
@@ -41,11 +27,6 @@ logs:
 monitoring:
   # Flag to indicate if Stackdriver monitoring is enabled or not (disabled by default).
   enabled: false
-
-firebase:
-  # API key for Firebase (public).
-  api_key: firebase-api-key
-  # auth_domain: login.custom-domain.com
 
 stacktrace:
   # Stack frames to ignore when determining the crash signature.
@@ -106,35 +87,24 @@ env:
   # Bucket to load code coverage information from.
   COVERAGE_BUCKET: test-coverage-bucket
 
-  # Specify either a HELP_URL or HELP_FORMAT for guiding developers on how to fix bugs.
-  # HELP_URL: help-page-for-reproducing-bugs
-  # HELP_FORMAT: help-template-for-reproducing-bugs, supports variables such as:
-  #              %PROJECT%, %TESTCASE%, %FUZZER_NAME%, %FUZZ_TARGET%, %ENGINE%,
-  #              %SANITIZER%, %SANITIZER_OPTIONS%, %ARGS%,
-  #              which get automatically subsituted in the template.
-  #              Make sure to unicode-escape the string, e.g. \n becomes \\n, etc.
+  #Django Backend SECRET_KEY
+  SECRET_KEY: "XXXXXX"
+  
+  # Minio Backend Server Host
+  MINIO_HOST: '127.0.0.1:9000'
 
-  # Default issue tracker name unless overridden in a job definition. Current only supports monorail
-  # issue tracker (disabled by default).
-  # ISSUE_TRACKER: issue-tracker-name
+  # Minio access key
+  MINIO_ACCESS_KEY: 'mK6kUOlDZ834q0wL'
+  #Minio secret key
+  MINIO_SECRET_KEY: 'Hq1cuslNaaAFcLXU6q45fqhrFGFG3UCO'
 
-  # Web tests (e.g. html, js tests) to automatically download once a day and provide a default
-  # input to fuzzer as part of --input-dir argument (disabled by default).
-  # WEB_TESTS_URL: 'gs://bucket/path-to-tests-archive.zip'
-  # UPDATE_WEB_TESTS: true
+  # Minio Root user and password
+  MINIO_ROOT_USER: 'minioadmin'
+  MINIO_ROOT_PASSWORD: 'minioadmin'
 
-  # Points to a source map json file containing component revisions for this app revision. This is
-  # used to know which components changed in a particular regression range.
-  # Read more about it here:
-  # https://google.github.io/clusterfuzz/production-setup/build-pipeline/#providing-revisions-for-the-build-dependencies
-  # REVISION_VARS_URL:
+  # Mino storage path
+  MINIO_STORAGE_PATH: '~/mounting_point/src/minio'
 
-  # Any of the above variables can be overridden in a job definition.
-
-# Pub/Sub topic for a custom bisection service.
-#bisect_service:
-  #pubsub_topic: projects/test-project/topics/bisection
-
-# Pub/Sub topic for receiving issue updates.
-#issue_updates:
-  #pubsub_topic: projects/test-project/topics/issue-updates
+  # DB
+  MONGO_HOST: 'mongodb://localhost:27017/'
+  MONGO_DB_PATH: '~/mounting_point/src/database'

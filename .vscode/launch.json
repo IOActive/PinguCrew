@@ -20,16 +20,15 @@
             ]
         },
         {
-            "name": "Python: Run Deploy",
+            "name": "Python: Run Server",
             "type": "python",
             "request": "launch",
             "program": "butler.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             "args": [
-                "deploy",
-                "-c",
-                "configs/test",
+                "run_server",
+                "--skip-install-deps",
             ]
         },
         {

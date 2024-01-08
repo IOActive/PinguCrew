@@ -21,3 +21,7 @@ resources:
   properties:
     region: gae-region
     memorySizeGb: 1
+
+env:
+  QUEUE_HOST: 'queue'
+  CELERY_BROKER_URL: 'amqp://queue'

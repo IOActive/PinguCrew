@@ -18,10 +18,11 @@ import threading
 import time
 import urllib.request
 
-from bot.config import local_config
-from local.butler import appengine
-from local.butler import common
-from local.butler import constants
+from pingubot.src.bot.config import local_config
+from src.local.butler import appengine
+from src.local.butler import common
+from src.local.butler import constants
+from backend.PinguApi.utils.MinioManager import MinioManger
 
 
 def bootstrap_db():
@@ -48,39 +49,37 @@ def create_local_bucket(local_gcs_buckets_path, name):
     os.mkdir(blobs_bucket)
 
 
-def bootstrap_gcs(storage_path):
+def bootstrap_buckets():
   """Bootstrap GCS."""
-  local_gcs_buckets_path = os.path.join(storage_path, 'local_gcs')
-  if not os.path.exists(local_gcs_buckets_path):
-    os.mkdir(local_gcs_buckets_path)
-
-  config = local_config.ProjectConfig()
   test_blobs_bucket = os.environ.get('TEST_BLOBS_BUCKET')
+  provider = MinioManger()
+
   if test_blobs_bucket:
-    create_local_bucket(local_gcs_buckets_path, test_blobs_bucket)
+    provider.crearteBucket(test_blobs_bucket)
   else:
-    create_local_bucket(local_gcs_buckets_path, config.get('blobs.bucket'))
+    provider.crearteBucket(os.environ.get('blobs.bucket'))
 
-  create_local_bucket(local_gcs_buckets_path, config.get('deployment.bucket'))
-  create_local_bucket(local_gcs_buckets_path, config.get('bigquery.bucket'))
-  create_local_bucket(local_gcs_buckets_path, config.get('backup.bucket'))
-  create_local_bucket(local_gcs_buckets_path, config.get('logs.fuzzer.bucket'))
-  create_local_bucket(local_gcs_buckets_path, config.get('env.CORPUS_BUCKET'))
-  create_local_bucket(local_gcs_buckets_path,
-                      config.get('env.QUARANTINE_BUCKET'))
-  create_local_bucket(local_gcs_buckets_path,
-                      config.get('env.SHARED_CORPUS_BUCKET'))
-  create_local_bucket(local_gcs_buckets_path,
-                      config.get('env.FUZZ_LOGS_BUCKET'))
-  create_local_bucket(local_gcs_buckets_path,
-                      config.get('env.MUTATOR_PLUGINS_BUCKET'))
+  '''
+  create_local_bucket(local_buckets_path, os.environ.get('deployment.bucket'))
+  create_local_bucket(local_buckets_path, os.environ.get('bigquery.bucket'))
+  create_local_bucket(local_buckets_path, os.environ.get('backup.bucket'))
+  create_local_bucket(local_buckets_path, os.environ.get('logs.fuzzer.bucket'))
+  create_local_bucket(local_buckets_path, os.environ.get('env.CORPUS_BUCKET'))
+  create_local_bucket(local_buckets_path,
+                      os.environ.get('env.QUARANTINE_BUCKET'))
+  create_local_bucket(local_buckets_path,
+                      os.environ.get('env.SHARED_CORPUS_BUCKET'))
+  create_local_bucket(local_buckets_path,
+                      os.environ.get('env.FUZZ_LOGS_BUCKET'))
+  create_local_bucket(local_buckets_path,
+                      os.environ.get('env.MUTATOR_PLUGINS_BUCKET'))
 
-  # Symlink local GCS bucket path to appengine src dir to bypass sandboxing
+  # Symlink local bucket path to appengine src dir to bypass sandboxing
   # issues.
   common.symlink(
-      src=local_gcs_buckets_path,
-      target=os.path.join(appengine.SRC_DIR_PY, 'local_gcs'))
-
+      src=local_buckets_path,
+      target=os.path.join(appengine.SRC_DIR_PY, 'local_buckets'))
+  '''
 
 def start_cron_threads():
   """Start threads to trigger essential cron jobs."""
@@ -126,39 +125,22 @@ def execute(args):
   # Do this everytime as a past deployment might have changed these.
   appengine.symlink_dirs()
 
-  # Deploy all yaml files from test project for basic appengine deployment and
-  # local testing to work. This needs to be called on every iteration as a past
-  # deployment might have overwritten or deleted these config files.
-  yaml_paths = local_config.GAEConfig().get_absolute_path('deployment.prod3')
-  appengine.copy_yamls_and_preprocess(yaml_paths)
-
-  # Build templates.
-  appengine.build_templates()
-
   # Clean storage directory if needed.
-  if args.bootstrap or args.clean:
-    if os.path.exists(args.storage_path):
-      print('Clearing local datastore by removing %s.' % args.storage_path)
-      shutil.rmtree(args.storage_path)
-  if not os.path.exists(args.storage_path):
-    os.makedirs(args.storage_path)
+  #if args.bootstrap or args.clean:
+  #  if os.path.exists(args.storage_path):
+  #    print('Clearing local datastore by removing %s.' % args.storage_path)
+  #    shutil.rmtree(args.storage_path)
+  #if not os.path.exists(args.storage_path):
+  #  os.makedirs(args.storage_path)
 
-  # Set up local GCS buckets and symlinks.
-  bootstrap_gcs(args.storage_path)
+  config = local_config.ProjectConfig().set_environment()
 
-  # # Start pubsub emulator.
-  # pubsub_emulator = test_utils.start_cloud_emulator(
-  #     'pubsub',
-  #     args=['--host-port=' + constants.PUBSUB_EMULATOR_HOST],
-  #     data_dir=args.storage_path)
-  # test_utils.setup_pubsub(constants.TEST_APP_ID)
+  # Run Bucket server, redis and mongo DB
 
-  # # Start Datastore emulator
-  # datastore_emulator = test_utils.start_cloud_emulator(
-  #     'datastore',
-  #     args=['--host-port=' + constants.DATASTORE_EMULATOR_HOST],
-  #     data_dir=args.storage_path,
-  #     store_on_disk=True)
+  docker_compose = common.execute('docker-compose up database queue minio')
+
+  # Set up local buckets and symlinks.
+  bootstrap_buckets()
 
   # Start our custom GCS emulator.
   local_gcs = common.execute_async(
@@ -193,3 +175,4 @@ def execute(args):
     #datastore_emulator.cleanup()
     #pubsub_emulator.cleanup()
     local_gcs.terminate()
+    docker_compose.terminate()

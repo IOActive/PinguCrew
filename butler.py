@@ -31,7 +31,7 @@ import venv
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 # guard needs to be at the top because it checks Python dependecies.
-from src.local.butler import guard
+from src.local.butler import common, constants, guard
 
 guard.check()
 
@@ -304,19 +304,34 @@ def main():
         parser.print_help()
         return
 
-    submodule_root=""
+    submodule_root=''
+
     if args.command == "run_bot":
         submodule_root="pingubot"
+        _setup(submodule_root)
+        command = importlib.import_module(f'src.pingubot.src.local.butler.{args.command}')
 
-    _setup(submodule_root)
-    command = importlib.import_module(f'local.butler.{args.command}')
+        os.environ['CONFIG_DIR_OVERRIDE'] = args.config_dir
+        config_dir = os.getenv('CONFIG_DIR_OVERRIDE', constants.TEST_CONFIG_DIR)
+        common.symlink(src=config_dir, target=os.path.join('src/pingubot', 'config'))
+        os.environ['CONFIG_DIR_OVERRIDE'] = os.path.join('src/pingubot', 'config')
+                
+    else:
+        _setup(submodule_root)
+        sys.path.insert(0, os.path.abspath(os.path.join('src/pingubot/src/')))
+        command = importlib.import_module(f'src.local.butler.{args.command}')
+
     command.execute(args)
 
 
-def _setup(submodule_root=""):
+def _setup(submodule_root=None):
     """Set up configs and import paths."""
 
-    os.environ['ROOT_DIR'] = os.path.abspath(f'./src/{submodule_root}')
+    if submodule_root:
+        os.environ['ROOT_DIR'] = os.path.abspath(f'./src/{submodule_root}')
+    else:
+        os.environ['ROOT_DIR'] = os.path.abspath(f'.')
+
     os.environ['PYTHONIOENCODING'] = 'UTF-8'
 
     sys.path.insert(0, os.path.abspath(os.path.join('src')))
