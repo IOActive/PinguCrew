@@ -225,7 +225,20 @@ def _pip():
     """Get the pip binary name."""
     return 'pip3'
 
+def _install_npm(requirements_path, target_path):
+    """Perform npm install using requirements_path onto target_path."""
+    if not os.path.exists(f"src/{requirements_path}"):
+        raise Exception('Requeriements file not found: %s.' % requirements_path) 
+    if os.path.exists(f"src/{target_path}/node_modules"):
+        shutil.rmtree(f"src/{target_path}/node_modules")
 
+    try:
+        execute(
+            f'npm install --prefix {target_path} {requirements_path} '
+            ,cwd=os.environ['ROOT_DIR'])
+    except Exception as e:
+        print(f"npm command excution erros: {e}")
+    
 def _install_pip(requirements_path, target_path):
     """Perform pip install using requirements_path onto target_path."""
     if not os.path.exists(requirements_path):
@@ -297,7 +310,6 @@ def install_dependencies(platform_name=None, is_reproduce_tool_setup=False):
     with tempfile.NamedTemporaryFile() as f:
         f.write(open('src/pingubot/requirements.txt', 'rb').read())
         f.flush()
-
         _install_pip(f.name, 'pingubot/third_party')
 
     if platform_name:
@@ -311,11 +323,12 @@ def install_dependencies(platform_name=None, is_reproduce_tool_setup=False):
     with tempfile.NamedTemporaryFile() as f:
         f.write(open('src/backend/requirements.txt', 'rb').read())
         f.flush()
-
         _install_pip(f.name, 'backend/third_party')
 
     """Install dependencies for Frontend."""
     #TODO: JS dependecies install
+    _install_npm("frontend", "frontend")
+
 
 
 

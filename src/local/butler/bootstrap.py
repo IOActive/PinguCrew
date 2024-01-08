@@ -25,7 +25,7 @@ def execute(args):
     common.install_dependencies(is_reproduce_tool_setup=is_reproduce_tool_setup)
 
     # App engine setup is not needed for the reproduce tool.
-    if not is_reproduce_tool_setup:
-        appengine.symlink_dirs()
+    #if not is_reproduce_tool_setup:
+    #    appengine.symlink_dirs()
 
     print('Bootstrap successfully finished.')
