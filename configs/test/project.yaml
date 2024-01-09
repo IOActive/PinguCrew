@@ -94,9 +94,9 @@ env:
   MINIO_HOST: '127.0.0.1:9000'
 
   # Minio access key
-  MINIO_ACCESS_KEY: 'mK6kUOlDZ834q0wL'
+  MINIO_ACCESS_KEY: 'bUUZXR8RJfYPOmtg'
   #Minio secret key
-  MINIO_SECRET_KEY: 'Hq1cuslNaaAFcLXU6q45fqhrFGFG3UCO'
+  MINIO_SECRET_KEY: '9gGWrrP1kPm6JL6s6YHgP6CSYKNONLZH'
 
   # Minio Root user and password
   MINIO_ROOT_USER: 'minioadmin'

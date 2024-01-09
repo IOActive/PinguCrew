@@ -13,13 +13,16 @@
 # limitations under the License.
 """Initial datastore setup."""
 
-from google.cloud import monitoring_v3
+import json
+import os
+import shlex
+import tempfile
 import six
+from src.local.butler import common
 
-from bot._internal.base import utils
-from bot._internal.datastore import data_types
-from bot._internal.metrics import monitor
-from bot._internal.metrics import monitoring_metrics
+from src.pingubot.src.bot.datastore.data_types import Fuzzer, JobTemplate
+#from src.pingubot.src.bot.metrics import monitor
+#from src.pingubot.src.bot.metrics import monitoring_metrics
 
 LIBFUZZER_TEMPLATE = """MAX_FUZZ_THREADS = 1
 MAX_TESTCASES = 2
@@ -139,29 +142,28 @@ class BaseBuiltinFuzzerDefaults(object):
   def __init__(self):
     # Set defaults for any builtin fuzzer.
     self.revision = 1
-    self.file_size = 'builtin'
+    self.file_size = 0
     self.source = 'builtin'
     self.builtin = True
 
     # Create attributes that must be set by child classes.
     self.name = None
-    self.stats_column_descriptions = None
-    self.stats_columns = None
-    self.key_id = None
+    self.stats_column_descriptions = {}
+    self.stats_columns = {}
 
   def create_fuzzer(self):
     """Create a Fuzzer data_type with columns set to the defaults specified by
     this object."""
     assert self.name is not None
-    return data_types.Fuzzer(
-        id=self.key_id,
+    return Fuzzer(
         revision=self.revision,
         file_size=self.file_size,
         source=self.source,
         name=self.name,
         builtin=self.builtin,
         stats_column_descriptions=self.stats_column_descriptions,
-        stats_columns=self.stats_columns)
+        stats_columns=self.stats_columns,
+)
 
 
 class LibFuzzerDefaults(BaseBuiltinFuzzerDefaults):
@@ -171,49 +173,51 @@ class LibFuzzerDefaults(BaseBuiltinFuzzerDefaults):
     super().__init__()
     # Override empty values from parent.
     self.name = 'libFuzzer'
-    self.key_id = 1337
     # Use single quotes since the string ends in a double quote.
     # pylint: disable=line-too-long
-    self.stats_column_descriptions = '''fuzzer: "Fuzz target"
-perf_report: "Link to performance analysis report"
-tests_executed: "Number of testcases executed during this time period"
-new_crashes: "Number of new unique crashes observed during this time period"
-edge_coverage: "Coverage for this fuzz target (number of edges/total)"
-cov_report: "Link to coverage report"
-corpus_size: "Size of the minimized corpus generated based on code coverage (number of testcases and total size on disk)"
-avg_exec_per_sec: "Average number of testcases executed per second"
-fuzzing_time_percent: "Percent of expected fuzzing time that is actually spent fuzzing."
-new_tests_added: "New testcases added to the corpus during fuzzing based on code coverage"
-new_features: "New coverage features based on new tests added to corpus."
-regular_crash_percent: "Percent of fuzzing runs that had regular crashes (other than ooms, leaks, timeouts, startup and bad instrumentation crashes)"
-oom_percent: "Percent of fuzzing runs that crashed on OOMs (should be 0)"
-leak_percent: "Percent of fuzzing runs that crashed on memory leaks (should be 0)"
-timeout_percent: "Percent of fuzzing runs that had testcases timeout (should be 0)"
-startup_crash_percent: "Percent of fuzzing runs that crashed on startup (should be 0)"
-avg_unwanted_log_lines: "Average number of unwanted log lines in fuzzing runs (should be 0)"
-total_fuzzing_time_hrs: "Total time in hours for which the fuzzer(s) ran. Will be lower if fuzzer hits a crash frequently."
-logs: "Link to fuzzing logs"
-corpus_backup: "Backup copy of the minimized corpus generated based on code coverage"'''
+    self.stats_column_descriptions = {"fuzzer": "Fuzz target",
+"perf_report": "Link to performance analysis report",
+"tests_executed": "Number of testcases executed during this time period",
+"new_crashes": "Number of new unique crashes observed during this time period",
+"edge_coverage": "Coverage for this fuzz target (number of edges/total)",
+"cov_report": "Link to coverage report",
+"corpus_size": "Size of the minimized corpus generated based on code coverage (number of testcases and total size on disk)",
+"avg_exec_per_sec": "Average number of testcases executed per second",
+"fuzzing_time_percent": "Percent of expected fuzzing time that is actually spent fuzzing.",
+"new_tests_added": "New testcases added to the corpus during fuzzing based on code coverage",
+"new_features": "New coverage features based on new tests added to corpus.",
+"regular_crash_percent": "Percent of fuzzing runs that had regular crashes (other than ooms, leaks, timeouts, startup and bad instrumentation crashes)",
+"oom_percent": "Percent of fuzzing runs that crashed on OOMs (should be 0)",
+"leak_percent": "Percent of fuzzing runs that crashed on memory leaks (should be 0)",
+"timeout_percent": "Percent of fuzzing runs that had testcases timeout (should be 0)",
+"startup_crash_percent": "Percent of fuzzing runs that crashed on startup (should be 0)",
+"avg_unwanted_log_lines": "Average number of unwanted log lines in fuzzing runs (should be 0)",
+"total_fuzzing_time_hrs": "Total time in hours for which the fuzzer(s) ran. Will be lower if fuzzer hits a crash frequently.",
+"logs": "Link to fuzzing logs",
+"corpus_backup": "Backup copy of the minimized corpus generated based on code coverage"}
 
-    self.stats_columns = """_PERFORMANCE_REPORT as perf_report,
-sum(t.number_of_executed_units) as tests_executed,
-custom(j.new_crashes) as new_crashes,
-_EDGE_COV as edge_coverage,
-_COV_REPORT as cov_report,
-_CORPUS_SIZE as corpus_size,
-avg(t.average_exec_per_sec) as avg_exec_per_sec,
-avg(t.fuzzing_time_percent) as fuzzing_time_percent,
-sum(t.new_units_added) as new_tests_added,
-sum(t.new_features) as new_features,
-avg(t.crash_count*100) as regular_crash_percent,
-avg(t.oom_count*100) as oom_percent,
-avg(t.leak_count*100) as leak_percent,
-avg(t.timeout_count*100) as timeout_percent,
-avg(t.startup_crash_count*100) as startup_crash_percent,
-avg(t.log_lines_unwanted) as avg_unwanted_log_lines,
-sum(t.actual_duration/3600.0) as total_fuzzing_time_hrs,
-_FUZZER_RUN_LOGS as logs,
-_CORPUS_BACKUP as corpus_backup,"""
+    self.stats_columns = { "collums": [
+        "perf_report",
+        "tests_executed",
+        "new_crashes",
+        "edge_coverage",
+        "_cov_report",
+        "corpus_size",
+        "avg_exec_per_sec",
+        "fuzzing_time_percent",
+        "new_tests_added",
+        "new_features",
+        "regular_crash_percent",
+        "oom_percent",
+        "leak_percent",
+        "timeout_percent",
+        "startup_crash_percent",
+        "avg_unwanted_log_lines",
+        "total_fuzzing_time_hrs",
+        "logs",
+        "corpus_backup",
+      ]
+    }
 
 
 class AflDefaults(BaseBuiltinFuzzerDefaults):
@@ -223,39 +227,41 @@ class AflDefaults(BaseBuiltinFuzzerDefaults):
     super().__init__()
     # Override empty values from parent.
     self.name = 'afl'
-    self.key_id = 1338
-    # Use single quotes since the string ends in a double quote.
-    # pylint: disable=line-too-long
-    self.stats_column_descriptions = '''fuzzer: "Fuzz target"
-new_crashes: "Number of new unique crashes observed during this time period"
-edge_coverage: "Edge coverage for this fuzz target (number of edges / total)"
-cov_report: "Link to coverage report"
-corpus_size: "Size of the minimized corpus generated based on code coverage (number of testcases and total size on disk)"
-avg_exec_per_sec: "Average number of testcases executed per second"
-stability: "Percentage of edges that behave deterministically"
-new_tests_added: "New testcases added to the corpus during fuzzing based on code coverage"
-regular_crash_percent: "Percent of fuzzing runs that had regular crashes (other than startup and bad instrumentation crashes)"
-timeout_percent: "Percent of fuzzing runs that had testcases timeout (should be 0)"
-startup_crash_percent: "Percent of fuzzing runs that crashed on startup (should be 0)"
-avg_unwanted_log_lines: "Average number of unwanted log lines in fuzzing runs (should be 0)"
-total_fuzzing_time_hrs: "Total time in hours for which the fuzzer(s) ran. Will be lower if fuzzer hits a crash frequently."
-logs: "Link to fuzzing logs"
-corpus_backup: "Backup copy of the minimized corpus generated based on code coverage"'''
+    self.stats_column_descriptions = {
+      "fuzzer": "Fuzz target",
+      "new_crashes": "Number of new unique crashes observed during this time period",
+      "edge_coverage": "Edge coverage for this fuzz target (number of edges / total)",
+      "cov_report": "Link to coverage report",
+      "corpus_size": "Size of the minimized corpus generated based on code coverage (number of testcases and total size on disk)",
+      "avg_exec_per_sec": "Average number of testcases executed per second",
+      "stability": "Percentage of edges that behave deterministically",
+      "new_tests_added": "New testcases added to the corpus during fuzzing based on code coverage",
+      "regular_crash_percent": "Percent of fuzzing runs that had regular crashes (other than startup and bad instrumentation crashes)",
+      "timeout_percent": "Percent of fuzzing runs that had testcases timeout (should be 0)",
+      "startup_crash_percent": "Percent of fuzzing runs that crashed on startup (should be 0)",
+      "avg_unwanted_log_lines": "Average number of unwanted log lines in fuzzing runs (should be 0)",
+      "total_fuzzing_time_hrs": "Total time in hours for which the fuzzer(s) ran. Will be lower if fuzzer hits a crash frequently.",
+      "logs": "Link to fuzzing logs",
+      "corpus_backup": "Backup copy of the minimized corpus generated based on code coverage",
+    }
 
-    self.stats_columns = """custom(j.new_crashes) as new_crashes,
-_EDGE_COV as edge_coverage,
-_COV_REPORT as cov_report,
-_CORPUS_SIZE as corpus_size,
-avg(t.average_exec_per_sec) as avg_exec_per_sec,
-avg(t.stability) as stability,
-sum(t.new_units_added) as new_tests_added,
-avg(t.crash_count*100) as regular_crash_percent,
-avg(t.timeout_count*100) as timeout_percent,
-avg(t.startup_crash_count*100) as startup_crash_percent,
-avg(t.log_lines_unwanted) as avg_unwanted_log_lines,
-sum(t.actual_duration/3600.0) as total_fuzzing_time_hrs,
-_FUZZER_RUN_LOGS as logs,
-_CORPUS_BACKUP as corpus_backup,"""
+    self.stats_columns = { "collums": [
+      "new_crashes",
+      "edge_coverage",
+      "cov_report",
+      "corpus_size",
+      "avg_exec_per_sec",
+      "stability",
+      "new_tests_added",
+      "regular_crash_percent",
+      "timeout_percent",
+      "startup_crash_percent",
+      "avg_unwanted_log_lines",
+      "total_fuzzing_time_hrs",
+      "as logs",
+      "corpus_backup",
+      ]
+    }
 
 
 class HonggfuzzDefaults(BaseBuiltinFuzzerDefaults):
@@ -285,19 +291,19 @@ class GoogleFuzzTestDefaults(BaseBuiltinFuzzerDefaults):
     self.name = 'googlefuzztest'
     self.key_id = 1341
 
-
+'''
 def setup_config(non_dry_run):
   """Set up configuration."""
-  config = data_types.Config.query().get()
+  config = Config.query().get()
   if not config:
-    config = data_types.Config()
+    config = Config()
 
     if non_dry_run:
       print('Creating config')
       config.put()
     else:
       print('Skip creating config (dry-run mode)')
-
+'''
 
 def setup_fuzzers(non_dry_run):
   """Set up fuzzers."""
@@ -308,22 +314,11 @@ def setup_fuzzers(non_dry_run):
       GoogleFuzzTestDefaults(),
       SyzkallerDefaults()
   ]:
-    fuzzer = data_types.Fuzzer.query(
-        data_types.Fuzzer.name == fuzzer_defaults.name).get()
-    if fuzzer:
-      print(fuzzer_defaults.name, 'fuzzer already exists')
-      if non_dry_run:
-        print('Updating stats metrics.')
-        fuzzer.stats_columns = fuzzer_defaults.stats_columns
-        fuzzer.stats_column_descriptions = (
-            fuzzer_defaults.stats_column_descriptions)
-        fuzzer.put()
-
-      continue
-
     if non_dry_run:
       print('Creating fuzzer', fuzzer_defaults.name)
-      fuzzer_defaults.create_fuzzer().put()
+      fuzzer_obj = fuzzer_defaults.create_fuzzer()
+      loaddata(fuzzer_obj)
+
     else:
       print('Skip creating fuzzer', fuzzer_defaults.name, '(dry-run mode)')
 
@@ -331,19 +326,14 @@ def setup_fuzzers(non_dry_run):
 def setup_templates(non_dry_run):
   """Set up templates."""
   for name, template in six.iteritems(TEMPLATES):
-    job = data_types.JobTemplate.query(
-        data_types.JobTemplate.name == name).get()
-    if job:
-      print('Template with name', name, 'already exists.')
-      continue
-
     if non_dry_run:
       print('Creating template', name)
-      data_types.JobTemplate(name=name, environment_string=template).put()
+      job_object = JobTemplate(name=name, environment_string=template)
+      loaddata(job_object)
     else:
       print('Skip creating template', name, '(dry-run mode)')
 
-
+'''
 def setup_metrics(non_dry_run):
   """Set up metrics."""
   client = monitoring_v3.MetricServiceClient()
@@ -363,15 +353,37 @@ def setup_metrics(non_dry_run):
       client.create_metric_descriptor(project_path, descriptor)
     else:
       print('Skip creating metric', descriptor, '(dry-run mode)')
+'''
+def loaddata(object):
+  payload = '''
+  [
+    {{
+        "model": "PinguApi.{model}",
+        "pk": "{id}",
+        "fields": {fields}
+    }}
+  ]'''.format(model=type(object).__name__, id=str(object.id), fields=object.json())
 
+  json_data = json.loads(payload)
+
+  with tempfile.NamedTemporaryFile(mode='w', suffix=".json") as f:
+      json.dump(json_data, f)
+      f.flush()
+      load_command_line = f"python manage.py loaddata --settings PinguBackend.settings.development {f.name}"
+      command = shlex.split(load_command_line, posix=True)
+      common.execute(
+        command=command,
+        exit_on_error=False,
+        cwd=os.environ['ROOT_DIR'])
 
 def execute(args):
   """Set up initial Datastore models."""
-  setup_config(args.non_dry_run)
+  #TODO:  add configuration capabilities
+  #setup_config(args.non_dry_run)
   setup_fuzzers(args.non_dry_run)
   setup_templates(args.non_dry_run)
 
-  if not args.local:
-    setup_metrics(args.non_dry_run)
+  #if not args.local:
+    #setup_metrics(args.non_dry_run)
 
   print('Done')

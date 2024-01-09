@@ -29,6 +29,7 @@
             "args": [
                 "run_server",
                 "--skip-install-deps",
+                //"-b"
             ]
         },
         {
@@ -42,5 +43,16 @@
                 "bootstrap",
             ]
         },
+        {
+            "name": "Python: Run Deploy",
+            "type": "python",
+            "request": "launch",
+            "program": "butler.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["run", "setup", "--non-dry-run", "--local", "--config-dir=configs/test"]
+
+        },
+
     ]
 }

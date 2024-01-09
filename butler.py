@@ -316,14 +316,17 @@ def main():
         common.symlink(src=config_dir, target=os.path.join('src/pingubot', 'config'))
         os.environ['CONFIG_DIR_OVERRIDE'] = os.path.join('src/pingubot', 'config')
 
-    elif args.command == "run_server":
+    elif args.command == "run_server" or args.command == "run":
         submodule_root='backend'
         _setup(submodule_root)
         sys.path.insert(0, os.path.abspath(os.path.join('src/pingubot/src/')))
+        sys.path.insert(0, os.path.abspath(os.path.join('src/pingubot/third_party/')))
         command = importlib.import_module(f'src.local.butler.{args.command}')
 
     else:
         _setup(submodule_root)
+        sys.path.insert(0, os.path.abspath(os.path.join('src/pingubot/src/')))
+        sys.path.insert(0, os.path.abspath(os.path.join('src/pingubot/third_party/')))
         command = importlib.import_module(f'src.local.butler.{args.command}')
 
     command.execute(args)

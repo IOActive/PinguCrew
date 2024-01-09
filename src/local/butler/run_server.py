@@ -13,6 +13,7 @@
 # limitations under the License.
 """run_server.py run the Clusterfuzz server locally."""
 import os
+import shlex
 import shutil
 import threading
 import time
@@ -32,10 +33,11 @@ def bootstrap_db():
     # Wait for the server to run.
     time.sleep(10)
     print('Bootstrapping datastore...')
+    command_line = f'python butler.py run setup --non-dry-run --local --config-dir={constants.TEST_CONFIG_DIR}'
+    command = shlex.split(command_line, posix=True)
+
     common.execute(
-        ('python butler.py run setup '
-         '--non-dry-run --local --config-dir={config_dir}'
-        ).format(config_dir=constants.TEST_CONFIG_DIR),
+        command=command,
         exit_on_error=False)
 
   thread = threading.Thread(target=bootstrap)
@@ -128,44 +130,44 @@ def execute(args):
 
   config.set_environment()
 
+  # Shout down all dockers to ensure everything starts correctly
+  common.execute(['/bin/bash', '-c', 'docker-compose down'])
+
   # Run Bucket server, redis and mongo DB
-
-  docker_compose = common.execute_async(['/bin/bash', '-c', 'docker-compose up database queue minio'])
-
-  # Set up local buckets and symlinks.
-  bootstrap_buckets(config)
-
-  # Start our custom GCS emulator.
-  local_gcs = common.execute_async(
-      'go run emulators/gcs.go -storage-path=' + os.path.join(
-          os.path.abspath(args.storage_path), 'local_gcs'),
-      cwd='local')
-
+  common.execute(['/bin/bash', '-c', 'docker-compose up --no-log-prefix -d database queue minio'])
+  time.sleep(5)
   if args.bootstrap:
+    # Set up local buckets and symlinks.
+    bootstrap_buckets(config)
     bootstrap_db()
 
   start_cron_threads()
 
   os.environ['APPLICATION_ID'] = constants.TEST_APP_ID
   os.environ['LOCAL_DEVELOPMENT'] = 'True'
-  os.environ['LOCAL_GCS_BUCKETS_PATH'] = 'local_gcs'
-  os.environ['LOCAL_GCS_SERVER_HOST'] = constants.LOCAL_GCS_SERVER_HOST
-  os.environ['DATASTORE_EMULATOR_HOST'] = constants.DATASTORE_EMULATOR_HOST
-  os.environ['PUBSUB_EMULATOR_HOST'] = constants.PUBSUB_EMULATOR_HOST
-  os.environ['GAE_ENV'] = 'dev'
+  os.environ['PINGU_ENV'] = 'dev'
   try:
-    cron_server = common.execute_async(
-        'gunicorn -b :{port} main:app'.format(port=constants.CRON_SERVICE_PORT),
-        cwd=os.path.join('src', 'appengine'))
+    # TODO: Migrate cron tasks to celery
+    #cron_server = common.execute_async(
+    #    'gunicorn -b :{port} main:app'.format(port=constants.CRON_SERVICE_PORT),
+    #    cwd=os.path.join('src', 'backend'))
+
+    #common.execute(
+    #    'gunicorn -b :{port} main:app'.format(
+    #        port=constants.DEV_APPSERVER_PORT),
+    #    cwd=os.path.join('src', 'backend'))
+
+    # Django run server command
+    command_line = f"python manage.py runserver {constants.DEV_APPSERVER_PORT} --settings PinguBackend.settings.development"
+    command = shlex.split(command_line, posix=True)
 
     common.execute(
-        'gunicorn -b :{port} main:app'.format(
-            port=constants.DEV_APPSERVER_PORT),
-        cwd=os.path.join('src', 'appengine'))
+      command,
+      cwd=os.environ['ROOT_DIR']
+    )
+    
   except KeyboardInterrupt:
     print('Server has been stopped. Exit.')
-    cron_server.terminate()
-    #datastore_emulator.cleanup()
-    #pubsub_emulator.cleanup()
-    local_gcs.terminate()
-    docker_compose.terminate()
+    #cron_server.terminate()
+    # Shout down all dockers to ensure everything starts correctly
+    common.execute(['/bin/bash', '-c', 'docker-compose down'])

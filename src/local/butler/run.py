@@ -18,7 +18,7 @@ import importlib
 import os
 
 from local.butler import constants
-from src.bot.config import local_config
+from src.pingubot.src.bot.config import local_config
 
 
 def execute(args):
@@ -28,15 +28,13 @@ def execute(args):
     local_config.ProjectConfig().set_environment()
 
     if args.local:
-        os.environ['DATASTORE_EMULATOR_HOST'] = constants.DATASTORE_EMULATOR_HOST
-        os.environ['PUBSUB_EMULATOR_HOST'] = constants.PUBSUB_EMULATOR_HOST
         os.environ['DATASTORE_USE_PROJECT_ID_AS_APP_ID'] = 'true'
         os.environ['LOCAL_DEVELOPMENT'] = 'True'
 
     if not args.non_dry_run:
         print('Running in dry-run mode, no datastore writes are committed. '
               'For permanent modifications, re-run with --non-dry-run.')
-
+    
     script = importlib.import_module(
         'local.butler.scripts.%s' % args.script_name)
     script.execute(args)
