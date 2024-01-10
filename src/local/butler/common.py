@@ -306,29 +306,32 @@ def _remove_invalid_files():
             os.remove(name)
 
 
-def install_dependencies(platform_name=None, is_reproduce_tool_setup=False):
-    """Install dependencies for bots."""
-    with tempfile.NamedTemporaryFile() as f:
-        f.write(open('src/pingubot/requirements.txt', 'rb').read())
-        f.flush()
-        _install_pip(f.name, 'src/pingubot/third_party')
+def install_dependencies(packages=[], platform_name=None, is_reproduce_tool_setup=False):
+    if "bot" in packages:
+        """Install dependencies for bots."""
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(open('src/pingubot/requirements.txt', 'rb').read())
+            f.flush()
+            _install_pip(f.name, 'src/pingubot/third_party')
 
-    if platform_name:
-        _install_platform_pip(
-            'src/platform_requirements.txt',
-            'src/third_party',
-            platform_name=platform_name)
+        if platform_name:
+            _install_platform_pip(
+                'src/platform_requirements.txt',
+                'src/third_party',
+                platform_name=platform_name)
 
-    """Install dependencies for Backend."""
+    if "backend" in packages:
+        """Install dependencies for Backend."""
 
-    with tempfile.NamedTemporaryFile() as f:
-        f.write(open('src/backend/requirements.txt', 'rb').read())
-        f.flush()
-        _install_pip(f.name, 'src/backend/third_party')
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(open('src/backend/requirements.txt', 'rb').read())
+            f.flush()
+            _install_pip(f.name, 'src/backend/third_party')
 
-    """Install dependencies for Frontend."""
-    #TODO: JS dependecies install
-    _install_npm("frontend", "frontend")
+    if "frontend" in packages:
+        """Install dependencies for Frontend."""
+        #TODO: JS dependecies install
+        _install_npm("frontend", "frontend")
 
 
 

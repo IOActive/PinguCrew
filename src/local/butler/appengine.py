@@ -69,9 +69,9 @@ def copy_yamls_and_preprocess(paths, additional_env_vars=None):
 
     return rebased_paths
 
-def symlink_dirs():
+def symlink_dirs(src_dir_py):
     """Symlink folders for use on appengine."""
-    symlink_config_dir()
+    symlink_config_dir(src_dir_py)
 
     #common.symlink(
     #    src=os.path.join('src', 'bot'),
@@ -80,7 +80,7 @@ def symlink_dirs():
     # Remove existing local_gcs symlink (if any). This is important, as otherwise
     # we will try deploying the directory in production. This is only needed for
     # local development in run_server.
-    local_gcs_symlink_path = os.path.join(SRC_DIR_PY, 'local_gcs')
+    local_gcs_symlink_path = os.path.join(src_dir_py, 'local_gcs')
     common.remove_symlink(local_gcs_symlink_path)
 
 
@@ -89,10 +89,10 @@ def build_templates():
     common.execute('python polymer_bundler.py', cwd='local')
 
 
-def symlink_config_dir():
+def symlink_config_dir(src_dir_py):
     """Symlink config directory in appengine directory."""
     config_dir = os.getenv('CONFIG_DIR_OVERRIDE', constants.TEST_CONFIG_DIR)
-    common.symlink(src=config_dir, target=os.path.join(SRC_DIR_PY, 'config'))
+    common.symlink(src=config_dir, target=os.path.join(src_dir_py, 'config'))
 
 
 def region_from_location(location):

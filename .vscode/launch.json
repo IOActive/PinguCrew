@@ -33,6 +33,18 @@
             ]
         },
         {
+            "name": "Python: Run Web",
+            "type": "python",
+            "request": "launch",
+            "program": "butler.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "run_web",
+                "--skip-install-deps",
+            ]
+        },
+        {
             "name": "Python: Run Bootstrap",
             "type": "python",
             "request": "launch",

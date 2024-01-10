@@ -298,6 +298,14 @@ def main():
         '--application',
         help='Name of the application binary to run. Only required if it '
              'differs from the one the test case was discovered with.')
+    
+    parser_run_web = subparsers.add_parser('run_web', help="Run Frontend web server")
+    parser_run_web.add_argument(
+        '--skip-install-deps',
+        action='store_true',
+        help=('Don\'t install dependencies before running this command (useful '
+              'when you\'re restarting the server often).'))
+
 
     args = parser.parse_args()
     if not args.command:
@@ -309,12 +317,12 @@ def main():
     if args.command == "run_bot":
         submodule_root="pingubot"
         _setup(submodule_root)
-        command = importlib.import_module(f'src.pingubot.src.local.butler.{args.command}')
-
+        #command = importlib.import_module(f'src.pingubot.src.local.butler.{args.command}')
         os.environ['CONFIG_DIR_OVERRIDE'] = args.config_dir
         config_dir = os.getenv('CONFIG_DIR_OVERRIDE', constants.TEST_CONFIG_DIR)
         common.symlink(src=config_dir, target=os.path.join('src/pingubot', 'config'))
         os.environ['CONFIG_DIR_OVERRIDE'] = os.path.join('src/pingubot', 'config')
+        command = importlib.import_module(f'src.local.butler.{args.command}')
 
     elif args.command == "run_server" or args.command == "run":
         submodule_root='backend'
@@ -323,6 +331,11 @@ def main():
         sys.path.insert(0, os.path.abspath(os.path.join('src/pingubot/third_party/')))
         command = importlib.import_module(f'src.local.butler.{args.command}')
 
+    elif args.command == "run_web":
+        submodule_root='frontend'
+        _setup(submodule_root)
+        command = importlib.import_module(f'src.local.butler.{args.command}')
+        
     else:
         _setup(submodule_root)
         sys.path.insert(0, os.path.abspath(os.path.join('src/pingubot/src/')))

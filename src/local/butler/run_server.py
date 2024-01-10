@@ -113,18 +113,13 @@ def execute(args):
   #os.environ['LOCAL_DEVELOPMENT'] = 'True'
 
   if not args.skip_install_deps:
-    common.install_dependencies()
+    common.install_dependencies(packages=["backend"], )
 
   # Do this everytime as a past deployment might have changed these.
-  appengine.symlink_dirs()
+  appengine.symlink_dirs(src_dir_py=os.path.join('src', 'backend'))
 
-  # Clean storage directory if needed.
+  # TODO: Clean DB and Butckets if needed.
   #if args.bootstrap or args.clean:
-  #  if os.path.exists(args.storage_path):
-  #    print('Clearing local datastore by removing %s.' % args.storage_path)
-  #    shutil.rmtree(args.storage_path)
-  #if not os.path.exists(args.storage_path):
-  #  os.makedirs(args.storage_path)
 
   config = local_config.ProjectConfig()
 
