@@ -84,6 +84,9 @@ env:
   # Bucket to store deployment artifacts, e.g. source archives, etc.
   DEPLOYMENT_BUCKET: test-deployment-bucket
 
+  # Default bucket to store bot execution logs
+  BOT_LOGS_BUCKET: test-bots-logs-bucket
+
   # Bucket to load code coverage information from.
   COVERAGE_BUCKET: test-coverage-bucket
 
@@ -108,3 +111,12 @@ env:
   # DB
   MONGO_HOST: 'mongodb://localhost:27017/'
   MONGO_DB_PATH: '~/mounting_point/src/database'
+
+  # Redis Queue
+  QUEUE_HOST: 'localhost'
+  CELERY_BROKER_URL: 'amqp://localhost'
+
+  # Web API Configuration
+  API_HOST: 'http://localhost:8086'
+  API_KEY:  'a13f9b7a2d9d1f029d22b17e882d824a5788a5fa'
+

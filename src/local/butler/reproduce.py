@@ -13,9 +13,9 @@
 # limitations under the License.
 """reproduce.py reproduces test cases locally."""
 
-from bot._internal.base import modules
+from src.pingubot.src.bot.system import modules
 
-modules.fix_module_search_paths()
+modules.fix_module_search_paths(submodule_root="pingubot")
 
 import os
 import shutil
@@ -23,18 +23,18 @@ import tempfile
 import time
 from urllib import parse
 
-from bot._internal.base import json_utils
-from bot._internal.base import utils
-from bot._internal.bot import testcase_manager
-from bot._internal.bot.fuzzers import init
-from bot._internal.bot.tasks import commands
-from bot._internal.bot.tasks import setup
-from bot._internal.build_management import build_manager
-from bot._internal.datastore import data_types
-from bot._internal.system import archive
-from bot._internal.system import environment
-from bot._internal.system import new_process
-from bot._internal.system import shell
+from src.pingubot.src.bot.utils import json_utils
+from src.pingubot.src.bot.utils  import utils
+from src.pingubot.src.bot import testcase_manager
+from src.pingubot.src.bot.fuzzers import init
+from src.pingubot.src.bot.tasks import commands
+from src.pingubot.src.bot.tasks import setup
+from src.pingubot.src.bot.build_management import build_manager
+from src.pingubot.src.bot.datastore import data_types
+from src.pingubot.src.bot.system import archive
+from src.pingubot.src.bot.system import environment
+from src.pingubot.src.bot.system import new_process
+from src.pingubot.src.bot.system import shell
 from local.butler import appengine
 from local.butler.reproduce_tool import android
 from local.butler.reproduce_tool import config

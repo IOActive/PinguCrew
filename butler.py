@@ -50,56 +50,6 @@ class _ArgumentParser(argparse.ArgumentParser):
         self.print_help()
         sys.exit(2)
 
-
-def _setup_args_for_remote(parser):
-    """Setup sub-parsers for the remote command."""
-    parser.add_argument(
-        '-i',
-        '--instance-name',
-        required=True,
-        help='The instance name (e.g. luckycat-linux-0005).')
-    parser.add_argument('--project', help='The Project ID.')
-    parser.add_argument('--zone', help='The Project Zone.')
-
-    subparsers = parser.add_subparsers(dest='remote')
-
-    parser_tail = subparsers.add_parser(
-        'tail', help='Print the last `size` lines of log_name.')
-    parser_tail.add_argument('log_name', help='The log file name (without .log).')
-    parser_tail.add_argument(
-        'line_count', type=int, help='The number of lines to be showed.')
-
-    parser_tailf = subparsers.add_parser(
-        'tailf',
-        help=('Print the last lines of logs and wait for more. '
-              'This is equivalent to tail -f.'))
-    parser_tailf.add_argument(
-        'log_names', nargs='+', help='The log file names (without .log).')
-
-    stage = subparsers.add_parser(
-        'stage',
-        help=('Stage a zip file by'
-              ' (1) Build a zip with `butler.py package`'
-              ' (2) Send the zip to the instance,'
-              ' (3) Unzip it to the bot path, and'
-              ' (4) Restart run_bot.py.'))
-    stage.add_argument(
-        '-c', '--config-dir', required=True, help='Path to application config.')
-
-    parser_rdp = subparsers.add_parser(
-        'rdp',
-        help=('Launch Remmina with correct configuration (e.g. IP address for the'
-              ' instance).'))
-    parser_rdp.add_argument(
-        '--share-path',
-        help=('The share path that is mounted on the remote instance.'
-              'It is convenient for sending files to the remote instance.'))
-
-    subparsers.add_parser('restart', help='Restart a bot by killing run_bot.py.')
-
-    subparsers.add_parser('reboot', help='Reboot with `sudo reboot`.')
-
-
 def main():
     """Parse the command-line args and invoke the right command."""
     parser = _ArgumentParser(
@@ -142,30 +92,7 @@ def main():
         action='store_true',
         help=('Do not close browser when tests '
               'finish. Good for debugging.'))
-
-    subparsers.add_parser('format', help='Format changed code in current branch.')
-    subparsers.add_parser('lint', help='Lint changed code in current branch.')
-
-    parser_package = subparsers.add_parser(
-        'package', help='Package bot with a staging revision')
-    parser_package.add_argument(
-        '-p', '--platform', choices=['linux', 'macos', 'windows', 'all'])
-
-    parser_deploy = subparsers.add_parser('deploy', help='Deploy to Appengine')
-    parser_deploy.add_argument(
-        '-f',
-        '--force',
-        action='store_true',
-        help='Force deploy from any branch.')
-    parser_deploy.add_argument(
-        '-c', '--config-dir', required=True, help='Path to application config.')
-    parser_deploy.add_argument(
-        '--staging', action='store_true', help='Deploy to staging.')
-    parser_deploy.add_argument(
-        '--prod', action='store_true', help='Deploy to production.')
-    parser_deploy.add_argument(
-        '--targets', nargs='*', default=['appengine', 'zips'])
-
+    
     parser_run_server = subparsers.add_parser(
         'run_server', help='Run the local Clusterfuzz server.')
     parser_run_server.add_argument(
@@ -218,45 +145,6 @@ def main():
         help='Serial number of an Android device to connect to instead of '
              'running normally.')
     parser_run_bot.add_argument('--testing', dest='testing', action='store_true')
-
-    parser_remote = subparsers.add_parser(
-        'remote', help=('Run command-line tasks on a remote bot.'))
-    _setup_args_for_remote(parser_remote)
-
-    parser_clean_indexes = subparsers.add_parser(
-        'clean_indexes', help=('Clean up undefined indexes (in index.yaml).'))
-    parser_clean_indexes.add_argument(
-        '-c', '--config-dir', required=True, help='Path to application config.')
-
-    parser_create_config = subparsers.add_parser(
-        'create_config', help='Create a new deployment config.')
-    parser_create_config.add_argument(
-        'new_config_dir', type=str, help='The new config directory to create.')
-    parser_create_config.add_argument(
-        '--project-id', type=str, required=True, help='Your Cloud Project ID.')
-    parser_create_config.add_argument(
-        '--firebase-api-key',
-        type=str,
-        required=True,
-        help='Firebase web API key (for authentication).')
-    parser_create_config.add_argument(
-        '--oauth-client-secrets-path',
-        type=str,
-        required=True,
-        help='Path to client_secrets.json.')
-    parser_create_config.add_argument(
-        '--gce-zone',
-        type=str,
-        default='us-central1-f',
-        help='Region for GCE VMs.')
-    parser_create_config.add_argument(
-        '--appengine-location',
-        type=str,
-        default='us-central',
-        help='Location for App Engine.')
-
-    subparsers.add_parser(
-        'integration_tests', help='Run end-to-end integration tests.')
 
     parser_reproduce = subparsers.add_parser(
         'reproduce', help='Reproduce a crash or error from a test case.')
@@ -318,10 +206,8 @@ def main():
         submodule_root="pingubot"
         _setup(submodule_root)
         #command = importlib.import_module(f'src.pingubot.src.local.butler.{args.command}')
-        os.environ['CONFIG_DIR_OVERRIDE'] = args.config_dir
-        config_dir = os.getenv('CONFIG_DIR_OVERRIDE', constants.TEST_CONFIG_DIR)
-        common.symlink(src=config_dir, target=os.path.join('src/pingubot', 'config'))
-        os.environ['CONFIG_DIR_OVERRIDE'] = os.path.join('src/pingubot', 'config')
+        common.symlink(src=args.config_dir, target=os.path.join('src/pingubot', 'config'))
+        #os.environ['CONFIG_DIR_OVERRIDE'] = os.path.join('src/pingubot', 'config')
         command = importlib.import_module(f'src.local.butler.{args.command}')
 
     elif args.command == "run_server" or args.command == "run":
