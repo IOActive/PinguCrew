@@ -9,10 +9,8 @@ permalink: /reference/job-definition/
 # Job definition
 
 This page walks you through various options that can be used for configuring a
-ClusterFuzz [job]. You may not need to use many of these options.
+Pingu [job]. You may not need to use many of these options.
 
-- TOC
-{:toc}
 ---
 
 ## Environment variables
@@ -144,9 +142,3 @@ REQUIRED_APP_ARGS =  --no-first-run --use-gl=swiftshader --disable-in-process-st
 TEST_TIMEOUT = 15
 ADDITIONAL_ASAN_OPTIONS = allocator_may_return_null=0
 ```
-
-[Google Cloud Storage]: https://cloud.google.com/storage/
-[corpus pruning]: {{ site.baseurl }}/reference/glossary/#corpus-pruning
-[job]: {{ site.baseurl }}/reference/glossary/#job-type
-[runtime flags for AddressSanitizer]: https://github.com/google/sanitizers/wiki/AddressSanitizerFlags#run-time-flags
-[specifying a continuous build]: {{ site.baseurl }}/production-setup/setting-up-fuzzing-job/#specifying-a-continuous-build
