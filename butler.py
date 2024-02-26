@@ -94,7 +94,7 @@ def main():
               'finish. Good for debugging.'))
     
     parser_run_server = subparsers.add_parser(
-        'run_server', help='Run the local Clusterfuzz server.')
+        'run_server', help='Run the local PinguCrew server.')
     parser_run_server.add_argument(
         '-b',
         '--bootstrap',
