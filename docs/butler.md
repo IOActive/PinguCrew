@@ -1,13 +1,11 @@
 # Buttler Command line Usage
 
 ## Bootstrap all PinguCrew Components
-The `bootstrap` command installs all the required dependencies for running all the components. To use this command, simply run 
+The `bootstrap` command installs all the required dependencies for running all the components and copies the config folder to all the project submodules. To use this command, simply run 
 
 ```bash 
 python butler.py bootstrap 
 ```
-
-Great, here is the updated documentation for the run server command in Butler:
 
 ## Run PinguCrew Backend Server:
 
@@ -96,3 +94,15 @@ For example, to run the reproduction process with default options, you can run t
 python butler.py reproduce -t <TESTCASE_URL> -b <BUILD_DIR> -a <APP_NAME>
 ```
 In addition, the `reproduce` command has many more options that you can find in the `help` output. Use the `python butler.py reproduce --help` command to see the full list of options.
+
+## Run command:
+
+The run command works as a wrapper to execute small managment scripts located in "src/local/butler/scripts/". To run a managament command, follow these steps:
+
+1. Start your Butler instance
+2. Use the `--non-dry-run` option to run the script enable writes to the actual datastore (eg. buildin fuzzers and templates).
+
+For example to initialize the initial datastore data execute the following command line:
+```bash
+python butler.py run setup --non-dry-run 
+```
