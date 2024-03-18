@@ -4,14 +4,15 @@
 # Index
 
 1. [Introduction to PinguCrew](#Introduction-to-PinguCrew): An Overview of the Toolset: This section provides a high-level overview of what Pingucrew is, what it does, and how it can help security researchers. It should provide a good foundation for understanding the rest of the documentation.
-2. PinguCrew - Frontend Overview: This section documents the frontend section of the Pingucrew framework. It should provide a detailed description of how the frontend is structured and how to use it, as well as any relevant code snippets that would be helpful to see in action.
+2. [PinguCrew - Frontend Overview](src/frontend/README.md): This section documents the frontend section of the Pingucrew framework. It should provide a detailed description of how the frontend is structured and how to use it, as well as any relevant code snippets that would be helpful to see in action.
 3. PinguCrew - Backend Overview: This section documents the backend section of the Pingucrew framework. It should provide a detailed description of how the backend is structured and how to use it, as well as any relevant code snippets that would be helpful to see in action.
 4. PinguCrew - Worker Bot Overview: This section documents the worker bot section of the Pingucrew framework. It should provide a detailed description of how the worker bot is structured and how to use it, as well as any relevant code snippets that would be helpful to see in action.
-5. PinguCrew - Toolset Management Overview: This section documents how to manage the tools in the Pingucrew framework. It should provide a detailed description of how to add, remove, or configure tools, as well as any relevant code snippets that would be helpful to see in action.
+5. [PinguCrew - Toolset Management Overview](docs/butler.md): This section documents how to manage the tools in the Pingucrew framework. It should provide a detailed description of how to add, remove, or configure tools, as well as any relevant code snippets that would be helpful to see in action.
 6. PinguCrew - Test Execution Overview: This section documents how to execute tests in the Pingucrew framework. After having set up a test case, it should describe how to start the test and how to view the results, as well as any relevant code snippets that would be helpful to see in action.
 7. PinguCrew - Test Results Overview: This section documents how to view and analyze test results in the Pingucrew framework. It should describe how to access the test report and how to analyze it, as well as any relevant code snippets that would be helpful to see in action.
 8. [PinguCrew Architecture components](docs/components.md): this section contatins a short descrition of each software component that composes the PinguCrew platform.
-9. Future Features
+9. [PinguCrew Installation](docs.daploymenet_instructions.md): This section explain in details how to deploy the PinguCrew framework to leave it ready to go.
+9. [Future Features](#future-features): This section contains some of the features that are plan to be implemented in a near future.
 
 
 # Introduction to PinguCrew 
@@ -39,8 +40,3 @@ The Pingucrew platform is continuously evolving to meet the needs of its users. 
 7. Code coverage reporting: The platform is already capable to collect code coverage information but the dashboard sectionis not yet implemented.
 
 These are just some of the planned future features for the Pingucrew platform. The platform is constantly evolving and expanding to meet the needs of its users, and these features will help ensure that it remains at the forefront of mobile testing technology.
-
-## Sync submodules
-```
-git submodule update --init
-```

@@ -120,3 +120,6 @@ env:
   API_HOST: 'http://localhost:8086'
   API_KEY:  'a13f9b7a2d9d1f029d22b17e882d824a5788a5fa'
 
+  # Django Configuration
+  BACKEND_SUPERUSER: 'admin'
+

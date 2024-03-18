@@ -21,9 +21,9 @@ For example, to start the PinguCrew server with default options, you can run the
 ```bash
 python butler.py run_server --skip-install-deps
 ```
-Alternatively, you can supply additional command-line arguments to specify options such as the bootstrap and clean flags.
+Alternatively, you can supply additional command-line arguments to specify options such as the bootstrap and clean.
 
-For example, to start the PinguCrew server with default options and perform a bootstrap, you can run the following command:
+For example, to start the PinguCrew server in your first execution with default options and initialize the database and the deafult buckets, you can run the following command:
 
 ```bash
 python butler.py run_server --bootstrap

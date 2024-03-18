@@ -4,23 +4,6 @@ import collections
 import os
 import sys
 
-# Chromedriver related constants.
-CHROMEDRIVER_VERSION_URL = (
-    'https://commondatastorage.googleapis.com/chromedriver/LATEST_RELEASE_91')
-CHROMEDRIVER_DOWNLOAD_PATTERN = (
-    'https://commondatastorage.googleapis.com/chromedriver/{version}/'
-    '{archive_name}')
-
-# Local directory of deployment files.
-PACKAGE_TARGET_ZIP_DIRECTORY = 'deployment'
-
-# Deprecated source archive name.
-LEGACY_ZIP_NAME = 'bot-source.zip'
-
-# File containing the source revision information.
-PACKAGE_TARGET_MANIFEST_PATH = os.path.join('src', 'appengine', 'resources',
-                                            'bot-source.manifest')
-
 # Supported Platforms and ABIS (newer to older order).
 PLATFORMS = collections.OrderedDict([
     ('windows', 'win_amd64'),
@@ -51,8 +34,3 @@ TEST_APP_ID_WITH_DEV_PREFIX = 'dev~' + TEST_APP_ID
 
 DEV_APPSERVER_PORT = 8086
 DEV_APPSERVER_HOST = 'localhost:' + str(DEV_APPSERVER_PORT)
-
-CRON_SERVICE_PORT = 9009
-CRON_SERVICE_HOST = 'localhost:' + str(CRON_SERVICE_PORT)
-
-DEV_APPSERVER_ADMIN_PORT = 9002

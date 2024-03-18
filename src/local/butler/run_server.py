@@ -31,6 +31,15 @@ def bootstrap_db():
   thread = threading.Thread(target=bootstrap)
   thread.start()
 
+def create_backend_admin_account(config):
+      # Django run server command
+    command_line = f"python manage.py createsuperuser --username {config.get('env.BACKEND_SUPERUSER')} --settings PinguBackend.settings.development"
+    command = shlex.split(command_line, posix=True)
+
+    common.execute(
+      command,
+      cwd=os.environ['ROOT_DIR']
+    )
 
 def create_minio_bucket(provider, name):
   """Create a local bucket."""
@@ -59,41 +68,6 @@ def bootstrap_buckets(config):
   create_minio_bucket(provider, config.get('env.QUARANTINE_BUCKET'))
   create_minio_bucket(provider, config.get('env.SHARED_CORPUS_BUCKET'))
   create_minio_bucket(provider, config.get('env.FUZZ_LOGS_BUCKET'))
-  
-
-  
-
-def start_cron_threads():
-  """Start threads to trigger essential cron jobs."""
-
-  request_timeout = 10 * 60  # 10 minutes.
-
-  def trigger(interval_seconds, target):
-    """Trigger a cron job."""
-    while True:
-      time.sleep(interval_seconds)
-
-      try:
-        url = 'http://{host}/{target}'.format(
-            host=constants.CRON_SERVICE_HOST, target=target)
-        request = urllib.request.Request(url)
-        request.add_header('X-Appengine-Cron', 'true')
-        response = urllib.request.urlopen(request, timeout=request_timeout)
-        response.read(60)  # wait for request to finish.
-      except Exception:
-        continue
-
-  crons = (
-      (90, 'cleanup'),
-      (60, 'triage'),
-      (6 * 3600, 'schedule-progression-tasks'),
-      (12 * 3600, 'schedule-corpus-pruning'),
-  )
-
-  for interval, cron in crons:
-    thread = threading.Thread(target=trigger, args=(interval, cron))
-    thread.daemon = True
-    thread.start()
 
 
 def execute(args):
@@ -120,26 +94,15 @@ def execute(args):
   common.execute(['/bin/bash', '-c', 'docker-compose up --no-log-prefix -d database queue minio'])
   time.sleep(5)
   if args.bootstrap:
+    create_backend_admin_account(config)
     # Set up local buckets and symlinks.
     bootstrap_buckets(config)
     bootstrap_db()
-
-  start_cron_threads()
 
   os.environ['APPLICATION_ID'] = constants.TEST_APP_ID
   os.environ['LOCAL_DEVELOPMENT'] = 'True'
   os.environ['PINGU_ENV'] = 'dev'
   try:
-    # TODO: Migrate cron tasks to celery
-    #cron_server = common.execute_async(
-    #    'gunicorn -b :{port} main:app'.format(port=constants.CRON_SERVICE_PORT),
-    #    cwd=os.path.join('src', 'backend'))
-
-    #common.execute(
-    #    'gunicorn -b :{port} main:app'.format(
-    #        port=constants.DEV_APPSERVER_PORT),
-    #    cwd=os.path.join('src', 'backend'))
-
     # Django run server command
     command_line = f"python manage.py runserver {constants.DEV_APPSERVER_PORT} --settings PinguBackend.settings.development"
     command = shlex.split(command_line, posix=True)
