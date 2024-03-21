@@ -1,9 +1,10 @@
 # Buttler Command line Usage
 
 ## Bootstrap all PinguCrew Components
-The `bootstrap` command installs all the required dependencies for running all the components and copies the config folder to all the project submodules. To use this command, simply run 
 
-```bash 
+The `bootstrap` command installs all the required dependencies for running all the components and copies the config folder to all the project submodules. To use this command, simply run
+
+```bash
 python butler.py bootstrap 
 ```
 
@@ -21,6 +22,7 @@ For example, to start the PinguCrew server with default options, you can run the
 ```bash
 python butler.py run_server --skip-install-deps
 ```
+
 Alternatively, you can supply additional command-line arguments to specify options such as the bootstrap and clean.
 
 For example, to start the PinguCrew server in your first execution with default options and initialize the database and the deafult buckets, you can run the following command:
@@ -28,17 +30,14 @@ For example, to start the PinguCrew server in your first execution with default 
 ```bash
 python butler.py run_server --bootstrap
 ```
-In addition, the `run_server` command has many more options that you can find in the `help` output. Use the `python butler run_server --help` command to see the full list of options.
-.
 
-Sure, here is the updated documentation for the `run_bot` command in Butler:
+In addition, the `run_server` command has many more options that you can find in the `help` output. Use the `python butler run_server --help` command to see the full list of options.
 
 ## Run Bot Command
 
-
 The `run_bot` command runs a local instance of your PinguBot app on the current directory. To run the bot, follow these steps:
 
-1. Run the butler command specifying a bot installation directory.
+1. Run the butler command specifying a bot installation directory (Eg. test-bot).
 2. Use the `--config-dir` option to specify the path to the application's config directory.
 3. Use the `--name` option to specify the name of the bot to create.
 4. Use the `--server-storage-path` option to specify the storage path for the local database.
@@ -47,32 +46,29 @@ The `run_bot` command runs a local instance of your PinguBot app on the current 
 
 For example, to create a new bot with default options, you can run the following command including the conmfiguration folder path and the folder path which will be the bot working directory:
 
-```bash 
+```bash
 python butler run_bot -c configs/test test-bot
 ```
-In addition, the `run_bot` command has many more options that you can find in the `help` output. Use the `python butler.py run_bot --help` command to see the full list of options.
 
-Sure, here is the updated documentation for the `run_web` command in Butler:
+In addition, the `run_bot` command has many more options that you can find in the `help` output. Use the `python butler.py run_bot --help` command to see the full list of options.
 
 ## Run Pingu Frontend
 
 The `run_web` command runs the Pingu frontend server on the current directory. To run the server, follow these steps:
 
 1. Start your Butler instance.
-3. Use the `--Skip-Install-Deps` option to skip installation of dependencies (if desired).
-4. The server will start and begin listening for requests.
+2. Use the `--Skip-Install-Deps` option to skip installation of dependencies (if desired).
+3. The server will start and begin listening for requests.
 
 For example, to run the server with default options, you can run the following command:
 
 ```bash
 python butler.py run_web
 ```
+
 In addition, the `run_web` command has many more options that you can find in the `help` output. Use the `python butler.py run_web --help` command to see the full list of options.
 
-Sure, here is the updated documentation for the `reproduce` command in Butler:
-
 ## Reproduce Command
-
 
 The `reproduce` command runs the reproduction process for a discovered testcase. To run the process, follow these steps:
 
@@ -93,6 +89,7 @@ For example, to run the reproduction process with default options, you can run t
 ```bash
 python butler.py reproduce -t <TESTCASE_URL> -b <BUILD_DIR> -a <APP_NAME>
 ```
+
 In addition, the `reproduce` command has many more options that you can find in the `help` output. Use the `python butler.py reproduce --help` command to see the full list of options.
 
 ## Run command:
@@ -103,6 +100,7 @@ The run command works as a wrapper to execute small managment scripts located in
 2. Use the `--non-dry-run` option to run the script enable writes to the actual datastore (eg. buildin fuzzers and templates).
 
 For example to initialize the initial datastore data execute the following command line:
+
 ```bash
 python butler.py run setup --non-dry-run 
 ```
