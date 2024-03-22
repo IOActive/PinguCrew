@@ -1,0 +1,10 @@
+# Pingu Components overview
+
+1. **Frontend/Dashboard**: The React JS frontend serves as the user interface for Pingucrew, providing a centralized location to view test reports, control tests, and monitor the health of the testing environment. The frontend is built using a modern web technology stack and is designed to be scalable and customizable.
+2. **Server Backend**: The server backend is built using Django API Server and is responsible for communicating with the frontend and the Pingu bots, managing the testing environment, and handling data storage. The backend is designed to be modular and extendable, allowing for easy integration with external services and the addition of new features.
+3. **Bot**: The Pingucrew bot is a custom-built automation framework that allows users to automate common testing tasks and workflows. The bot is built using Python and incorporates advanced features such as run fuzzing campaings, analyze testcases, triage testcases, etc.
+4. **Mongo DB**: The MongoDB database is used to store test data and results, providing a scalable and efficient data storage solution. MongoDB is an open-source, NoSQL database designed to handle large amounts of data and accommodate varying data structures.
+5. **Minio Buckets Server**: Minio is a highly scalable object storage solution that provides a drop-in replacement for bucket cloud services. It allows users to store and access large amounts of data, providing a robust and reliable storage solution.
+6. **Rabbit MQ**: RabbitMQ is a high-performance message queuing system that is used to manage the communication between different components in the Pingucrew system. It provides an efficient and scalable messaging platform that allows for the queueing and routing of messages between different parts of the testing environment.
+
+These components work together to provide a comprehensive fuzzing platform that incorporates advanced features and is designed to scale to meet the needs of any security team.

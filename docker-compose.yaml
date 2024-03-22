@@ -1,0 +1,65 @@
+version: '3'
+services:
+    
+  database:
+    image: mongo
+    restart: always
+    hostname: 'database'
+    volumes:
+      - db_data:/data/db
+      - db_data:/data/configdb
+    ports:
+      - "27017:27017"
+
+  backend:
+    depends_on:
+      - queue
+      - database
+    hostname: 'backend'
+    build:
+      context: ./
+      dockerfile: ./docker/backend/Dockerfile
+
+  queue:
+    image: "rabbitmq:3-management"
+    hostname: 'queue'
+    volumes:
+      - queue:/var/lib/rabbitmq
+    environment:
+      - RABBITMQ_ERLANG_COOKIE=s3cr3tc00ki3
+    # Uncomment for debugging purposes
+
+    ports: 
+      - '5672:5672'
+      - '15672:15672'
+    logging:
+      driver: none
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2022-06-03T01-40-53Z
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_USER}
+    command: 'server /data --console-address ":9001"'
+
+
+volumes:
+  db_data:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: ${MONGO_DB_PATH}
+  minio_data:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: ${MINIO_STORAGE_PATH}
+  backend_data:
+  queue:

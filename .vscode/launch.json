@@ -1,0 +1,70 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Run Bot",
+            "type": "python",
+            "request": "launch",
+            "program": "butler.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "run_bot",
+                "-c",
+                "configs/test",
+                "--testing",
+                "test-bot"
+            ]
+        },
+        {
+            "name": "Python: Run Server",
+            "type": "python",
+            "request": "launch",
+            "program": "butler.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "run_server",
+                "--skip-install-deps",
+                //"-b"
+            ]
+        },
+        {
+            "name": "Python: Run Web",
+            "type": "python",
+            "request": "launch",
+            "program": "butler.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "run_web",
+                "--skip-install-deps",
+            ]
+        },
+        {
+            "name": "Python: Run Bootstrap",
+            "type": "python",
+            "request": "launch",
+            "program": "butler.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "bootstrap",
+            ]
+        },
+        {
+            "name": "Python: Run Deploy",
+            "type": "python",
+            "request": "launch",
+            "program": "butler.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["run", "setup", "--non-dry-run", "--local", "--config-dir=configs/test"]
+
+        },
+
+    ]
+}
