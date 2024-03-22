@@ -2,7 +2,7 @@
 
 # Index
 
-1. [Introduction to PinguCrew](#Introduction-to-PinguCrew): An Overview of the Toolset: This section provides a high-level overview of what Pingucrew is, what it does, and how it can help security researchers. It should provide a good foundation for understanding the rest of the documentation.
+1. [Introduction to PinguCrew](#Introduction-to-PinguCrew): This section provides a high-level overview of what Pingucrew is, what it does, and how it can help security researchers. It should provide a good foundation for understanding the rest of the documentation.
 2. [PinguCrew - Frontend Overview](src/frontend/README.md): This section documents the frontend section of the Pingucrew framework. It should provide a detailed description of how the frontend is structured and how to use it, as well as any relevant code snippets that would be helpful to see in action.
 3. [PinguCrew - Backend Overview](src/backend/README.md): This section documents the backend section of the Pingucrew framework. It should provide a detailed description of how the backend is structured and how to use it, as well as any relevant code snippets that would be helpful to see in action.
 4. PinguCrew - Worker Bot Overview: This section documents the worker bot section of the Pingucrew framework. It should provide a detailed description of how the worker bot is structured and how to use it, as well as any relevant code snippets that would be helpful to see in action.
