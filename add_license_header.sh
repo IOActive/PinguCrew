@@ -14,7 +14,7 @@ done
 
 # find all .js or .jsx files except those in "excluded_folder"
 excluded_folder="src/frontend/node_modules"
-files=$(find ./src/frontend -name "*.js" -or -name "*.jsx" -not -path "*$excluded_folder/*" -type f)
+files=$(find ./src/frontend -name "*.jsx" -not -path "*$excluded_folder/*" -type f)
 
 # open each file and insert the license header
 for file in $files; do
