@@ -20,6 +20,6 @@ files=$(find ./src/frontend -name "*.jsx" -not -path "*$excluded_folder/*" -type
 for file in $files; do
   if ! grep -q Copyright $file
   then
-      cat copyright.txt $file >$file.new && mv $file.new $file
+      cat src/frontend/copyright.txt $file >$file.new && mv $file.new $file
   fi
 done
