@@ -18,6 +18,13 @@ import collections
 import os
 import sys
 
+# Chromedriver related constants.
+#CHROMEDRIVER_VERSION_URL = (
+#    'https://commondatastorage.googleapis.com/chromedriver/LATEST_RELEASE_101')
+#CHROMEDRIVER_DOWNLOAD_PATTERN = (
+#    'https://commondatastorage.googleapis.com/chromedriver/{version}/'
+#    '{archive_name}')
+
 # Supported Platforms and ABIS (newer to older order).
 PLATFORMS = collections.OrderedDict([
     ('windows', 'win_amd64'),

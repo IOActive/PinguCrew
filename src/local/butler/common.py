@@ -344,7 +344,7 @@ def install_dependencies(packages=[], platform_name=None, is_reproduce_tool_setu
     _remove_invalid_files()
     #execute('bower install --allow-root')
 
-    _install_chromedriver()
+    #_install_chromedriver()
 
 
 def remove_symlink(target):
