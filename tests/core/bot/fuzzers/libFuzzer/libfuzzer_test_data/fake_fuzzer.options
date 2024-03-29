@@ -1,3 +1,0 @@
-[asan]
-detect_leaks=0
-fake_option=1

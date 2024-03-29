@@ -1,5 +1,7 @@
 # PinguCrew
 
+![Logo](pingucrew_logo.png)
+
 # Index
 
 1. [Introduction to PinguCrew](#Introduction-to-PinguCrew): This section provides a high-level overview of what Pingucrew is, what it does, and how it can help security researchers. It should provide a good foundation for understanding the rest of the documentation.

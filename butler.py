@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2024 IOActive
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """Butler is here to help you with command-line tasks (e.g. running unit tests,
    deploying).
 
@@ -65,34 +66,7 @@ def main():
         '--only-reproduce',
         action='store_true',
         help='Only install dependencies needed for the reproduce tool.')
-
-    parser_py_unittest = subparsers.add_parser(
-        'py_unittest', help='Run Python unit tests.')
-    parser_py_unittest.add_argument(
-        '-p', '--pattern', help='Pattern for test files. Default is *_test.py.')
-    parser_py_unittest.add_argument(
-        '-u',
-        '--unsuppress-output',
-        action='store_true',
-        help='Unsuppress output from `print`. Good for debugging.')
-    parser_py_unittest.add_argument(
-        '-m', '--parallel', action='store_true', help='Run tests in parallel.')
-    parser_py_unittest.add_argument(
-        '-v', '--verbose', action='store_true', help='Print logs from tests.')
-    parser_py_unittest.add_argument(
-        '-t', '--target', required=True, choices=['appengine', 'core', 'modules'])
-    parser_py_unittest.add_argument(
-        '-c', '--config-dir', help='Config dir to use for module tests.')
-
-    parser_js_unittest = subparsers.add_parser(
-        'js_unittest', help='Run Javascript unit tests.')
-    parser_js_unittest.add_argument(
-        '-p',
-        '--persist',
-        action='store_true',
-        help=('Do not close browser when tests '
-              'finish. Good for debugging.'))
-    
+   
     parser_run_server = subparsers.add_parser(
         'run_server', help='Run the local PinguCrew server.')
     parser_run_server.add_argument(
