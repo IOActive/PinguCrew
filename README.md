@@ -23,8 +23,6 @@ PinguCrew is designed to be highly modular, enabling users to easily integrate n
 
 PinguCrew also provides users with a [Butler](docs/butler.md) script to automate many of the common tasks involved in running and managing fuzzers, including deployments, executions, and tracking test results. This makes it easier for security researchers to focus on their research, without having to worry about the technical details of running and analyzing fuzzing tests.
 
-Sure, here is an example section with some planned future features for Pingucrew:
-
 ## Future Features:
 
 The Pingucrew platform is continuously evolving to meet the needs of its users. Here are some planned future features that are being developed for the platform:
