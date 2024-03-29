@@ -39,7 +39,7 @@ stacktrace:
 # bucket_domain_suffix: bucket.suffix
 
 env:
-  # Application ID for the Google Cloud Project. In production, this will have a s~ prefix.
+  # Application ID the Project. In production, this will have a s~ prefix.
   APPLICATION_ID: test-bot
 
   # Default project name unless overridden in a job definition.

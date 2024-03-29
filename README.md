@@ -1,5 +1,7 @@
 # PinguCrew
 
+![Logo](pingucrew_logo.png)
+
 # Index
 
 1. [Introduction to PinguCrew](#Introduction-to-PinguCrew): This section provides a high-level overview of what Pingucrew is, what it does, and how it can help security researchers. It should provide a good foundation for understanding the rest of the documentation.
@@ -22,8 +24,6 @@ Unlike ClusterFuzz, which requires users to use a third-party hosting platform, 
 PinguCrew is designed to be highly modular, enabling users to easily integrate new fuzzer tools or modify existing ones to match their specific needs. The tool is built using a microservices architecture, with a Frontend using ReactJS to handle the user interface, a Backend using Django Python to handle server-side tasks and a Python worker bot to execute the fuzzer test cases.
 
 PinguCrew also provides users with a [Butler](docs/butler.md) script to automate many of the common tasks involved in running and managing fuzzers, including deployments, executions, and tracking test results. This makes it easier for security researchers to focus on their research, without having to worry about the technical details of running and analyzing fuzzing tests.
-
-Sure, here is an example section with some planned future features for Pingucrew:
 
 ## Future Features:
 

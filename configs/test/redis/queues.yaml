@@ -1,0 +1,51 @@
+resources:
+  - name: jobs-linux
+
+  - name: high-end-jobs-linux
+
+  - name: jobs-linux-with-gpu
+
+  - name: high-end-jobs-linux-with-gpu
+
+  - name: jobs-windows
+
+  - name: high-end-jobs-windows
+
+  - name: jobs-windows-with-gpu
+
+  - name: high-end-jobs-windows-with-gpu
+
+  - name: jobs-mac
+
+  - name: high-end-jobs-mac
+
+  - name: jobs-android
+
+  - name: high-end-jobs-android
+
+  - name: jobs-android-kernel
+
+  - name: jobs-android-x86
+
+  - name: jobs-android-emulator
+
+  - name: high-end-jobs-android-x86
+
+  - name: jobs-android-local-devices
+
+  - name: high-end-jobs-android-local-devices
+
+  - name: jobs-chromeos
+
+  - name: high-end-jobs-chromeos
+
+  - name: jobs-linux-untrusted
+
+  - name: high-end-jobs-linux-untrusted
+
+  - name: jobs-fuchsia
+
+  - name: high-end-jobs-fuchsia
+
+  - name: ml-jobs-linux
+
