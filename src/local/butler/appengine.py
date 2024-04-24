@@ -30,7 +30,7 @@ def _add_env_vars_if_needed(yaml_path, additional_env_vars):
     # Defer imports since our python paths have to be set up first.
     import yaml
 
-    from src.bot.config import local_config
+    from src.pingubot.src.bot.config import local_config
 
     env_values = local_config.ProjectConfig().get('env')
     if additional_env_vars:

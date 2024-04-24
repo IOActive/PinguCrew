@@ -19,9 +19,9 @@ import webbrowser
 
 import httplib2
 
-from bot._internal.base import json_utils
-from bot._internal.base import utils
-from bot._internal.system import shell
+from src.pingubot.src.bot.utils import json_utils
+from src.pingubot.src.bot.utils import utils
+from src.pingubot.src.bot.system import shell
 from local.butler.reproduce_tool import prompts
 
 GET_METHOD = 'GET'

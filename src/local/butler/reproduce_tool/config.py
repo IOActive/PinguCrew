@@ -16,7 +16,7 @@
 
 from urllib import parse
 
-from bot._internal.base import json_utils
+from src.pingubot.src.bot.utils import json_utils
 from local.butler.reproduce_tool import errors
 from local.butler.reproduce_tool import http_utils
 

@@ -17,10 +17,10 @@
 import os
 import time
 
-from bot._internal.platforms.android import adb
-from bot._internal.platforms.android import device
-from bot._internal.system import environment
-from bot._internal.system import new_process
+from src.pingubot.src.bot.platforms.android import adb
+from src.pingubot.src.bot.platforms.android import device
+from src.pingubot.src.bot.system import environment
+from src.pingubot.src.bot.system  import new_process
 from local.butler.reproduce_tool import errors
 from local.butler.reproduce_tool import prompts
 

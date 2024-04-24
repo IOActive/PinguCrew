@@ -14,6 +14,8 @@
 
 """reproduce.py reproduces test cases locally."""
 
+import base64
+from src.pingubot.src.bot.config import local_config
 from src.pingubot.src.bot.system import modules
 
 modules.fix_module_search_paths(submodule_root="pingubot")
@@ -36,7 +38,7 @@ from src.pingubot.src.bot.system import archive
 from src.pingubot.src.bot.system import environment
 from src.pingubot.src.bot.system import new_process
 from src.pingubot.src.bot.system import shell
-from local.butler import appengine
+from src.pingubot.src.bot.datastore.data_handler import get_testcase_by_id, get_job, get_crash_by_testcase, get_fuzzer_by_id
 from local.butler.reproduce_tool import android
 from local.butler.reproduce_tool import config
 from local.butler.reproduce_tool import errors
@@ -88,43 +90,18 @@ class SerializedTestcase(object):
     return fuzz_target
 
 
-def _get_testcase(testcase_id, configuration):
-  """Retrieve the json representation of the test case with the given id."""
-  response, content = http_utils.request(
-      configuration.get('testcase_info_url'),
-      body={'testcaseId': testcase_id},
-      configuration=configuration)
-
-  if response.status != 200:
-    raise errors.ReproduceToolUnrecoverableError(
-        'Unable to fetch test case information.')
-
-  testcase_map = json_utils.loads(content)
-  return SerializedTestcase(testcase_map)
-
-
-def _download_testcase(testcase_id, testcase, configuration):
+def prepare_testcase(testcase):
   """Download the test case and return its path."""
   print('Downloading testcase...')
-  testcase_download_url = '{url}?id={id}'.format(
-      url=configuration.get('testcase_download_url'), id=testcase_id)
-  response, content = http_utils.request(
-      testcase_download_url,
-      method=http_utils.GET_METHOD,
-      configuration=configuration)
 
-  if response.status != 200:
-    raise errors.ReproduceToolUnrecoverableError(
-        'Unable to download test case.')
+  content = base64.b64decode(testcase.test_case)
 
-  bot_absolute_filename = response[FILENAME_RESPONSE_HEADER]
   # Store the test case in the config directory for debuggability.
   testcase_directory = os.path.join(CONFIG_DIRECTORY, 'current-testcase')
   shell.remove_directory(testcase_directory, recreate=True)
   environment.set_value('FUZZ_INPUTS', testcase_directory)
-  testcase_path = os.path.join(testcase_directory,
-                               os.path.basename(bot_absolute_filename))
-
+  testcase_path = f'{testcase_directory}/{testcase.id}'
+                               
   utils.write_data_to_file(content, testcase_path)
 
   # Unpack the test case if it's archived.
@@ -155,12 +132,12 @@ def _download_testcase(testcase_id, testcase, configuration):
   return testcase_path
 
 
-def _setup_x():
+def _setup_x(fuzzer_name):
   """Start Xvfb and blackbox before running the test application."""
   if environment.platform() != 'LINUX':
     return []
 
-  if environment.is_engine_fuzzer_job():
+  if environment.is_engine_fuzzer_job(fuzzer_name):
     # For engine fuzzer jobs like AFL, libFuzzer, Xvfb is not needed as the
     # those fuzz targets do not needed a UI.
     return []
@@ -190,39 +167,31 @@ def _prepare_initial_environment(build_directory, iterations, verbose):
   temp_root_dir = tempfile.mkdtemp()
   environment.set_value('ROOT_DIR', temp_root_dir)
 
-  def _update_directory(directory_name, ignore_paths=None):
+  def _update_directory(directory_name, destination, ignore_paths=None):
     """Copy a subdirectory from a checkout to a temp directory."""
     if not ignore_paths:
       ignore_paths = []
 
     shutil.copytree(
         os.path.join(root_dir, directory_name),
-        os.path.join(temp_root_dir, directory_name),
+        os.path.join(temp_root_dir, destination),
         ignore=lambda directory, contents:
         contents if directory in ignore_paths else [])
 
-  _update_directory('bot')
-  _update_directory('configs')
-  _update_directory('resources')
-  _update_directory(
-      'src',
-      ignore_paths=[
-          os.path.join(root_dir, 'src', 'appengine'),
-          os.path.join(root_dir, 'src', 'bazel-bin'),
-          os.path.join(root_dir, 'src', 'bazel-genfiles'),
-          os.path.join(root_dir, 'src', 'bazel-out'),
-          os.path.join(root_dir, 'src', 'bazel-src'),
-          os.path.join(root_dir, 'src', 'bot', '_internal', 'tests'),
-      ])
+  _update_directory('src/pingubot/src', 'src/bot')
+  _update_directory('configs', 'configs')
+  _update_directory('src/pingubot/resources', 'resources')
+  _update_directory('src/pingubot/bot_working_directory','bot_working_directory')
+
 
   environment.set_value('CONFIG_DIR_OVERRIDE',
                         os.path.join(temp_root_dir, 'configs', 'test'))
   environment.set_value(
       'PYTHONPATH',
-      os.pathsep.join(
-          [os.path.join(temp_root_dir, 'src'),
-           appengine.find_sdk_path()]))
+      os.path.join(temp_root_dir, 'src')
+  )
 
+  local_config.ProjectConfig().set_environment()
   environment.set_bot_environment()
 
   # Overrides that should not be set to the default values.
@@ -253,18 +222,20 @@ def _verify_target_exists(build_directory):
             build_directory=build_directory))
 
 
-def _update_environment_for_testcase(testcase, build_directory,
+def _update_environment_for_testcase(testcase: data_types.Testcase, testcase_related_job: data_types.Job,
+                                     tesetcase_related_fuzzer: data_types.Fuzzer,
+                                     build_directory,
                                      application_override):
   """Update environment variables that depend on the test case."""
-  commands.update_environment_for_job(testcase.job_definition)
-  environment.set_value('JOB_NAME', testcase.job_type)
-
+  commands.update_environment_for_job(testcase_related_job.environment_string)
+  environment.set_value('JOB_NAME', testcase_related_job.id)
+  
   # Override app name if explicitly specified.
   if application_override:
     environment.set_value('APP_NAME', application_override)
 
-  if testcase.fuzzer_name:
-    fuzzer_directory = setup.get_fuzzer_directory(testcase.fuzzer_name)
+  if tesetcase_related_fuzzer.name:
+    fuzzer_directory = setup.get_fuzzer_directory(tesetcase_related_fuzzer.name)
   else:
     fuzzer_directory = os.path.join(environment.get_value('ROOT_DIR'), 'fuzzer')
     shell.create_directory(fuzzer_directory)
@@ -272,35 +243,12 @@ def _update_environment_for_testcase(testcase, build_directory,
   environment.set_value('FUZZER_DIR', fuzzer_directory)
 
   task_name = environment.get_value('TASK_NAME')
-  setup.prepare_environment_for_testcase(testcase, testcase.job_type, task_name)
+  setup.prepare_environment_for_testcase(testcase, testcase_related_job.id, task_name)
 
   build_manager.set_environment_vars(
       [environment.get_value('FUZZER_DIR'), build_directory])
 
   _verify_target_exists(build_directory)
-
-
-def _get_testcase_id_from_url(testcase_url):
-  """Convert a testcase URL to a testcase ID."""
-  url_parts = parse.urlparse(testcase_url)
-  # Testcase urls have paths like "/testcase-detail/1234567890", where the
-  # number is the testcase ID.
-  path_parts = url_parts.path.split('/')
-
-  try:
-    testcase_id = int(path_parts[-1])
-  except (ValueError, IndexError):
-    testcase_id = 0
-
-  # Validate that the URL is correct.
-  if (len(path_parts) != 3 or path_parts[0] or
-      path_parts[1] != 'testcase-detail' or not testcase_id):
-    raise errors.ReproduceToolUnrecoverableError(
-        'Invalid testcase URL {url}. Expected format: '
-        'https://clusterfuzz-domain/testcase-detail/1234567890'.format(
-            url=testcase_url))
-
-  return testcase_id
 
 
 def _print_stacktrace(result):
@@ -311,62 +259,65 @@ def _print_stacktrace(result):
   print()
 
 
-def _reproduce_crash(testcase_url, build_directory, iterations, disable_xvfb,
+def _reproduce_crash(testcase_id, build_directory, iterations, disable_xvfb,
                      verbose, disable_android_setup, application):
   """Reproduce a crash."""
   _prepare_initial_environment(build_directory, iterations, verbose)
 
   # Validate the test case URL and fetch the tool's configuration.
-  testcase_id = _get_testcase_id_from_url(testcase_url)
-  configuration = config.ReproduceToolConfiguration(testcase_url)
-  testcase = _get_testcase(testcase_id, configuration)
+  #configuration = config.ReproduceToolConfiguration(testcase_id)
+  testcase = get_testcase_by_id(testcase_id=testcase_id)
+  testcase_related_job = get_job(job_id=str(testcase.job_id))
+  testcase_raelated_crash = get_crash_by_testcase(testcase_id=str(testcase.id))
 
   # For new user uploads, we'll fail without the metadata set by analyze task.
-  if not testcase.platform:
+  if not testcase_related_job.platform:
     raise errors.ReproduceToolUnrecoverableError(
         'This test case has not yet been processed. Please try again later.')
 
   # Ensure that we support this test case's platform.
-  if testcase.platform not in SUPPORTED_PLATFORMS:
+  if testcase_related_job.platform.lower() not in SUPPORTED_PLATFORMS:
     raise errors.ReproduceToolUnrecoverableError(
         'The reproduce tool is not yet supported on {platform}.'.format(
-            platform=testcase.platform))
+            platform=testcase_related_job.platform))
 
   # Print warnings for this test case.
   if testcase.one_time_crasher_flag:
     print('Warning: this test case was a one-time crash. It may not be '
           'reproducible.')
-  if testcase.flaky_stack:
+  if testcase_raelated_crash.flaky_stack:
     print('Warning: this test case is known to crash with different stack '
           'traces.')
 
-  testcase_path = _download_testcase(testcase_id, testcase, configuration)
-  _update_environment_for_testcase(testcase, build_directory, application)
+  testcase_path = prepare_testcase(testcase)
+  tesetcase_related_fuzzer = get_fuzzer_by_id(testcase.fuzzer_id)
+
+  _update_environment_for_testcase(testcase, testcase_related_job, tesetcase_related_fuzzer, build_directory, application)
 
   # Validate that we're running on the right platform for this test case.
   platform = environment.platform().lower()
-  if testcase.platform == 'android' and platform == 'linux':
+  if testcase_related_job.platform.lower() == 'android' and platform == 'linux':
     android.prepare_environment(disable_android_setup)
-  elif testcase.platform == 'android' and platform != 'linux':
+  elif testcase_related_job.platform.lower() == 'android' and platform != 'linux':
     raise errors.ReproduceToolUnrecoverableError(
         'The ClusterFuzz environment only supports running Android test cases '
         'on Linux host machines. Unable to reproduce the test case on '
         '{current_platform}.'.format(current_platform=platform))
-  elif testcase.platform != platform:
+  elif testcase_related_job.platform.lower() != platform:
     raise errors.ReproduceToolUnrecoverableError(
         'The specified test case was discovered on {testcase_platform}. '
         'Unable to attempt to reproduce it on {current_platform}.'.format(
-            testcase_platform=testcase.platform, current_platform=platform))
+            testcase_platform=testcase_related_job.platform, current_platform=platform))
 
   x_processes = []
   if not disable_xvfb:
-    _setup_x()
+    _setup_x(tesetcase_related_fuzzer.name)
   timeout = environment.get_value('TEST_TIMEOUT')
 
   print('Running testcase...')
   try:
     result = testcase_manager.test_for_crash_with_retries(
-        testcase, testcase_path, timeout, crash_retries=1)
+        testcase, testcase_path, timeout, testcase_raelated_crash, crash_retries=1)
 
     # If we can't reproduce the crash, prompt the user to try again.
     if not result.is_crash():
@@ -379,7 +330,7 @@ def _reproduce_crash(testcase_url, build_directory, iterations, disable_xvfb,
       if use_default_retries:
         print('Attempting to reproduce test case. This may take a while...')
         result = testcase_manager.test_for_crash_with_retries(
-            testcase, testcase_path, timeout)
+            testcase, testcase_path, timeout, testcase_raelated_crash)
 
   except KeyboardInterrupt:
     print('Aborting...')

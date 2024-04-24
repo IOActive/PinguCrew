@@ -65,6 +65,21 @@
             "args": ["run", "setup", "--non-dry-run", "--local", "--config-dir=configs/test"]
 
         },
+        {
+            "name": "Python: Run Reproduce",
+            "type": "python",
+            "request": "launch",
+            "program": "butler.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": ["reproduce", 
+            "-t",
+             "5680cd06-67d7-4f48-93b8-61346edbae87",
+              "-b",
+               "test-bot/bot_working_directory/builds/127.0.0.1:9000_test_770807ff2d8d31b43785f87303e8a91a87120e40"
+            ]
+
+        },
 
     ]
 }
