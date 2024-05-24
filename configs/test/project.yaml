@@ -45,6 +45,16 @@ env:
   # Default project name unless overridden in a job definition.
   PROJECT_NAME: test-project
 
+  #Default Bucket to store fuzzers blobss
+  FUZZERS_BUCKET: test-fuzzers-bucket
+
+  # Multiple type of Build Buckets base on the code nature
+  RELEASE_BUILD_BUCKET: test-release-build-bucket
+  SYM_RELEASE_BUILD_BUCKET: test-sym-release-build-bucket
+  SYM_DEBUG_BUILD_BUCKET: test-sym-release-build-bucket
+  STABLE_BUILD_BUCKET: test-stable-build-bucket
+  BETA_BUILD_BUCKET: test-beta-build-bucket
+
   # Default bucket to store corpus / useful testcases found during fuzzing. This has sub-directories
   # for each fuzzer, but not for jobs. So, unless you override this in a job definition, a fuzzer
   # across different jobs share the same corpus (e.g. useful for different fuzzing engines to
@@ -118,7 +128,7 @@ env:
 
   # Web API Configuration
   API_HOST: 'http://localhost:8086'
-  API_KEY:  'a13f9b7a2d9d1f029d22b17e882d824a5788a5fa'
+  API_KEY:  'c3dee2591a3b91a355e3f635ebf886b3a0dcb596'
 
   # Django Configuration
   BACKEND_SUPERUSER: 'admin'

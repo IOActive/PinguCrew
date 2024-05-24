@@ -67,8 +67,7 @@ def bootstrap_buckets(config):
   """Bootstrap GCS."""
   test_blobs_bucket = os.environ.get('TEST_BLOBS_BUCKET')
   provider = MinioProvider()
-
-
+  
   if test_blobs_bucket:
     create_minio_bucket(provider, test_blobs_bucket)
   else:
@@ -82,6 +81,12 @@ def bootstrap_buckets(config):
   create_minio_bucket(provider, config.get('env.QUARANTINE_BUCKET'))
   create_minio_bucket(provider, config.get('env.SHARED_CORPUS_BUCKET'))
   create_minio_bucket(provider, config.get('env.FUZZ_LOGS_BUCKET'))
+  create_minio_bucket(provider, config.get('env.FUZZERS_BUCKET'))
+  create_minio_bucket(provider, config.get('env.RELEASE_BUILD_BUCKET'))
+  create_minio_bucket(provider, config.get('env.SYM_RELEASE_BUILD_BUCKET'))
+  create_minio_bucket(provider, config.get('env.SYM_DEBUG_BUILD_BUCKET'))
+  create_minio_bucket(provider, config.get('env.STABLE_BUILD_BUCKET'))
+  create_minio_bucket(provider, config.get('env.BETA_BUILD_BUCKET'))
 
 
 def execute(args):
