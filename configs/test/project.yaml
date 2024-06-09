@@ -100,6 +100,9 @@ env:
   # Bucket to load code coverage information from.
   COVERAGE_BUCKET: test-coverage-bucket
 
+  # Bucket to store dataflow builds
+  DATAFLOW_BUILD_BUCKET: test-dataflow-builds-bucket
+
   #Django Backend SECRET_KEY
   SECRET_KEY: "XXXXXX"
   
@@ -128,7 +131,7 @@ env:
 
   # Web API Configuration
   API_HOST: 'http://localhost:8086'
-  API_KEY:  'c3dee2591a3b91a355e3f635ebf886b3a0dcb596'
+  API_KEY:  'd44173ccddd762733b8cea1a337f8895ed8b5010'
 
   # Django Configuration
   BACKEND_SUPERUSER: 'admin'
