@@ -74,9 +74,9 @@
             "justMyCode": true,
             "args": ["reproduce", 
             "-t",
-             "5680cd06-67d7-4f48-93b8-61346edbae87",
+             "7bd76792-6f22-4afb-a3c7-35e87631820e",
               "-b",
-               "test-bot/bot_working_directory/builds/127.0.0.1:9000_test_770807ff2d8d31b43785f87303e8a91a87120e40"
+               "test-bot/bot_working_directory/builds/test-release-build-bucket"
             ]
 
         },
