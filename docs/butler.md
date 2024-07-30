@@ -74,7 +74,7 @@ The `reproduce` command runs the reproduction process for a discovered testcase.
 
 1. Start your Butler instance.
 2. Navigate to the directory where you want to run the reproduction process.
-3. Use the `--testcase` option to specify the URL of the discovered testcase.
+3. Use the `--testcase` option to specify the id of the discovered testcase.
 4. Use the `--build-dir` option to specify the path to the build directory containing the target app and dependencies.
 5. Use the `--iterations` option to specify the number of times to attempt reproduction.
 6. Use the `--disable-xvfb` option to disable running the testcase in a virtual frame buffer.
@@ -87,7 +87,8 @@ The `reproduce` command runs the reproduction process for a discovered testcase.
 For example, to run the reproduction process with default options, you can run the following command:
 
 ```bash
-python butler.py reproduce -t <TESTCASE_URL> -b <BUILD_DIR> -a <APP_NAME>
+python butler.py reproduce -t <TESTCASE_ID
+> -b <BUILD_DIR> -a <APP_NAME>
 ```
 
 In addition, the `reproduce` command has many more options that you can find in the `help` output. Use the `python butler.py reproduce --help` command to see the full list of options.
