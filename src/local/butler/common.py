@@ -19,7 +19,6 @@ import datetime
 import io
 import os
 import platform
-import shlex
 import shutil
 import subprocess
 import sys
@@ -160,7 +159,8 @@ def execute(command,
         _print('| Return code is non-zero (%d).' % proc.returncode)
         if exit_on_error:
             _print('| Exit.')
-            sys.exit(proc.returncode)
+            raise Exception("Command failed %s" % output)
+            #sys.exit(proc.returncode)
 
     return (proc.returncode, output)
 

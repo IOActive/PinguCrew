@@ -20,9 +20,12 @@ def execute(args):
     """Run the server."""
     if not args.skip_install_deps:
         common.install_dependencies(packages=["frontend"])
-
+        
     # Do this everytime as a past deployment might have changed these.
-    appengine.symlink_dirs(src_dir_py=os.path.join('src', 'frontend'))
+    appengine.sync_dirs(src_dir_py=os.path.join('src', 'frontend'), sub_configs=['frontend'])
+    
+    # For testing as CRA is a pain to load from outside src
+    appengine.sync_dirs(src_dir_py=os.path.join('src', 'frontend', 'src'), sub_configs=['frontend'])
   
     # Run Web server
     try:

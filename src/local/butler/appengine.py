@@ -17,7 +17,6 @@
 from distutils import spawn
 import os
 import shutil
-import sys
 
 from local.butler import common
 from local.butler import constants
@@ -30,9 +29,9 @@ def _add_env_vars_if_needed(yaml_path, additional_env_vars):
     # Defer imports since our python paths have to be set up first.
     import yaml
 
-    from src.pingubot.src.bot.config import local_config
+    from pingu_sdk.config import project_config
 
-    env_values = local_config.ProjectConfig().get('env')
+    env_values = project_config.ProjectConfig().get('env')
     if additional_env_vars:
         env_values.update(additional_env_vars)
 
@@ -70,19 +69,9 @@ def copy_yamls_and_preprocess(paths, additional_env_vars=None):
 
     return rebased_paths
 
-def symlink_dirs(src_dir_py):
+def sync_dirs(src_dir_py, sub_configs):
     """Symlink folders for use on appengine."""
-    symlink_config_dir(src_dir_py)
-
-    #common.symlink(
-    #    src=os.path.join('src', 'bot'),
-    #    target=os.path.join(SRC_DIR_PY, 'bot'))
-
-    # Remove existing local_gcs symlink (if any). This is important, as otherwise
-    # we will try deploying the directory in production. This is only needed for
-    # local development in run_server.
-    local_gcs_symlink_path = os.path.join(src_dir_py, 'local_gcs')
-    common.remove_symlink(local_gcs_symlink_path)
+    syc_config_dir(src_dir_py, sub_configs)
 
 
 def build_templates():
@@ -90,10 +79,20 @@ def build_templates():
     common.execute('python polymer_bundler.py', cwd='local')
 
 
-def symlink_config_dir(src_dir_py):
+def syc_config_dir(src_dir_py, sub_configs):
     """Symlink config directory in appengine directory."""
+    if os.path.exists(os.path.join(src_dir_py, 'config')):
+        shutil.rmtree(os.path.join(src_dir_py, 'config'))
+        
+    os.mkdir(os.path.join(src_dir_py, 'config'))
     config_dir = os.getenv('CONFIG_DIR_OVERRIDE', constants.TEST_CONFIG_DIR)
-    common.symlink(src=config_dir, target=os.path.join(src_dir_py, 'config'))
+
+    for sub_config in sub_configs:  
+        shutil.copytree(
+            src=os.path.join(config_dir, sub_config),
+            dst=os.path.join(src_dir_py, 'config', sub_config)
+        )
+    
 
 
 def region_from_location(location):

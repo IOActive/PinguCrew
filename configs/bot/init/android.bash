@@ -1,4 +1,5 @@
-# Copyright 2024 IOActive
+#!/bin/bash
+# Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,13 +12,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import subprocess
-
-class EmailSender():
-    def send_mail(self, email, recipient):
-        subprocess.call('echo "' + email + '" | mail -s "Fuzzing Stats" ' + recipient, shell=True)
-
-    def send_mails_to_all_recipients(self, email, recipients):
-        for recipient in recipients:
-            self.send_mail(email, recipient)

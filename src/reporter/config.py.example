@@ -1,6 +1,0 @@
-#StatsFetcher
-base_url = 'https://localhost:5000'
-authentication_token = 'yuL4uJ4loqCGl86NDwDloPaPa5PQZs0f9hXRrLjbnJNLau3vxWKs3qS0XKN7BV3o'
-
-#EmailSender
-recipients = ['user1@gmail.de', 'user2@gmx.de']

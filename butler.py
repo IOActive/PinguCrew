@@ -22,202 +22,108 @@
    Please do `python butler.py --help` to see what Butler can help you.
 """
 
-import argparse
+import click
 import importlib
 import os
-import subprocess
 import sys
-import venv
+from argparse import Namespace
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-# guard needs to be at the top because it checks Python dependecies.
 from src.local.butler import common, constants, guard
+from src.local.butler.modules import fix_module_search_paths
 
 guard.check()
 
+@click.group()
+def cli():
+    """Butler is here to help you with command-line tasks."""
+    pass
 
-class _ArgumentParser(argparse.ArgumentParser):
-    """Custom ArgumentParser."""
-
-    def __init__(self, *args, **kwargs):
-        """Override formatter_class to show default argument values in message."""
-        kwargs['formatter_class'] = argparse.ArgumentDefaultsHelpFormatter
-        argparse.ArgumentParser.__init__(self, *args, **kwargs)
-
-    def error(self, message):
-        """Override to print full help for ever error."""
-        sys.stderr.write('error: %s\n' % message)
-        self.print_help()
-        sys.exit(2)
-
-def main():
-    """Parse the command-line args and invoke the right command."""
-    parser = _ArgumentParser(
-        description='Butler is here to help you with command-line tasks.')
-    subparsers = parser.add_subparsers(dest='command')
-
-    parser_bootstrap = subparsers.add_parser(
-        'bootstrap',
-        help=('Install all required dependencies for running an appengine, a bot,'
-              'and a mapreduce locally.'))
-    parser_bootstrap.add_argument(
-        '-r',
-        '--only-reproduce',
-        action='store_true',
-        help='Only install dependencies needed for the reproduce tool.')
-   
-    parser_run_server = subparsers.add_parser(
-        'run_server', help='Run the local PinguCrew server.')
-    parser_run_server.add_argument(
-        '-b',
-        '--bootstrap',
-        action='store_true',
-        help='Bootstrap the local database.')
-    parser_run_server.add_argument(
-        '--storage-path',
-        default='local/storage',
-        help='storage path for local database.')
-    parser_run_server.add_argument(
-        '--skip-install-deps',
-        action='store_true',
-        help=('Don\'t install dependencies before running this command (useful '
-              'when you\'re restarting the server often).'))
-    parser_run_server.add_argument(
-        '--log-level', default='info', help='Logging level')
-    parser_run_server.add_argument(
-        '--clean', action='store_true', help='Clear existing database data.')
-
-    parser_run = subparsers.add_parser(
-        'run', help='Run a one-off script against a datastore (e.g. migration).')
-    parser_run.add_argument(
-        'script_name',
-        help='The script module name under `./local/butler/scripts`.')
-    parser_run.add_argument(
-        '--non-dry-run',
-        action='store_true',
-        help='Run with actual datastore writes. Default to dry-run.')
-    parser_run.add_argument(
-        '-c', '--config-dir', required=True, help='Path to application config.')
-    parser_run.add_argument(
-        '--local', action='store_true', help='Run against local server instance.')
-
-    parser_run_bot = subparsers.add_parser(
-        'run_bot', help='Run a local bot bot.')
-
-    parser_run_bot.add_argument(
-        '-c', '--config-dir', required=True, help='Path to application config.')
-    parser_run_bot.add_argument(
-        '--name', default='test-bot', help='Name of the bot.')
-    parser_run_bot.add_argument(
-        '--server-storage-path',
-        default='local/storage',
-        help='Server storage path.')
-    parser_run_bot.add_argument('directory', help='Directory to create bot in.')
-    parser_run_bot.add_argument(
-        '--android-serial',
-        help='Serial number of an Android device to connect to instead of '
-             'running normally.')
-    parser_run_bot.add_argument('--testing', dest='testing', action='store_true')
-
-    parser_reproduce = subparsers.add_parser(
-        'reproduce', help='Reproduce a crash or error from a test case.')
-    parser_reproduce.add_argument(
-        '-t', '--testcase', required=True, help='Testcase URL.')
-    parser_reproduce.add_argument(
-        '-b',
-        '--build-dir',
-        required=True,
-        help='Build directory containing the target app and dependencies.')
-    parser_reproduce.add_argument(
-        '-i',
-        '--iterations',
-        default=10,
-        help='Number of times to attempt reproduction.')
-    parser_reproduce.add_argument(
-        '-dx',
-        '--disable-xvfb',
-        action='store_true',
-        help='Disable running test case in a virtual frame buffer.')
-    parser_reproduce.add_argument(
-        '-da',
-        '--disable-android-setup',
-        action='store_true',
-        help='Skip Android device setup. Speeds up Android reproduction, but '
-             'assumes the device has already been configured by the tool.')
-    parser_reproduce.add_argument(
-        '-v',
-        '--verbose',
-        action='store_true',
-        help='Print additional log messages while running.')
-    parser_reproduce.add_argument(
-        '-e',
-        '--emulator',
-        action='store_true',
-        help='Run and attempt to reproduce a crash using the Android emulator.')
-    parser_reproduce.add_argument(
-        '-a',
-        '--application',
-        help='Name of the application binary to run. Only required if it '
-             'differs from the one the test case was discovered with.')
-    
-    parser_run_web = subparsers.add_parser('run_web', help="Run Frontend web server")
-    parser_run_web.add_argument(
-        '--skip-install-deps',
-        action='store_true',
-        help=('Don\'t install dependencies before running this command (useful '
-              'when you\'re restarting the server often).'))
-
-
-    args = parser.parse_args()
-    if not args.command:
-        parser.print_help()
-        return
-
-    submodule_root=None
-
-    if args.command == "run_bot":
-        submodule_root="pingubot"
-        _setup(submodule_root)
-        #command = importlib.import_module(f'src.pingubot.src.local.butler.{args.command}')
-        common.symlink(src=args.config_dir, target=os.path.join('src/pingubot', 'config'))
-        #os.environ['CONFIG_DIR_OVERRIDE'] = os.path.join('src/pingubot', 'config')
-        command = importlib.import_module(f'src.local.butler.{args.command}')
-
-    elif args.command == "run_server" or args.command == "run":
-        submodule_root='backend'
-        _setup(submodule_root)
-        sys.path.insert(0, os.path.abspath(os.path.join('src/pingubot/src/')))
-        sys.path.insert(0, os.path.abspath(os.path.join('src/pingubot/third_party/')))
-        command = importlib.import_module(f'src.local.butler.{args.command}')
-
-    elif args.command == "run_web":
-        submodule_root='frontend'
-        _setup(submodule_root)
-        command = importlib.import_module(f'src.local.butler.{args.command}')
-        
-    else:
-        _setup(submodule_root)
-        sys.path.insert(0, os.path.abspath(os.path.join('src/pingubot/src/')))
-        sys.path.insert(0, os.path.abspath(os.path.join('src/pingubot/third_party/')))
-        command = importlib.import_module(f'src.local.butler.{args.command}')
-
+@cli.command()
+@click.option('-r', '--only-reproduce', is_flag=True, help='Only install dependencies needed for the reproduce tool.')
+@click.option('-p', '--packages', multiple=True, default=['bot', 'backend', 'frontend'], help='List of packages to install.')
+def bootstrap(only_reproduce, packages):
+    """Install all required dependencies for running locally."""
+    command = importlib.import_module('src.local.butler.bootstrap')
+    _setup(None)
+    args = Namespace(only_reproduce=only_reproduce, packages=list(packages))
     command.execute(args)
 
+@cli.command()
+@click.option('-b', '--bootstrap', is_flag=True, help='Bootstrap the local database.')
+@click.option('--storage-path', default='local/storage', help='Storage path for local database.')
+@click.option('--skip-install-deps', is_flag=True, help='Skip installing dependencies before running.')
+@click.option('--log-level', default='info', help='Logging level.')
+@click.option('--clean', is_flag=True, help='Clear existing database data.')
+def run_server(bootstrap, storage_path, skip_install_deps, log_level, clean):
+    """Run the local PinguCrew server."""
+    command = importlib.import_module('src.local.butler.run_server')
+    _setup('backend')
+    args = Namespace(bootstrap=bootstrap, storage_path=storage_path, skip_install_deps=skip_install_deps, log_level=log_level, clean=clean)
+    command.execute(args)
+
+@cli.command()
+@click.argument('script_name')
+@click.option('--non-dry-run', is_flag=True, help='Run with actual datastore writes.')
+@click.option('-c', '--config-dir', required=True, help='Path to application config.')
+@click.option('--local', is_flag=True, help='Run against local server instance.')
+def run(script_name, non_dry_run, config_dir, local):
+    """Run a one-off script against a datastore."""
+    command = importlib.import_module(f'src.local.butler.scripts.{script_name}')
+    _setup(None)
+    args = Namespace(script_name=script_name, non_dry_run=non_dry_run, config_dir=config_dir, local=local)
+    command.execute(args)
+
+@cli.command()
+@click.option('-c', '--config-dir', required=True, help='Path to application config.')
+@click.option('--name', default='test-bot', help='Name of the bot.')
+@click.option('--server-storage-path', default='local/storage', help='Server storage path.')
+@click.argument('directory')
+@click.option('--android-serial', help='Serial number of an Android device to connect to.')
+@click.option('--testing', is_flag=True, help='Run in testing mode.')
+def run_bot(config_dir, name, server_storage_path, directory, android_serial, testing):
+    """Run a local bot."""
+    command = importlib.import_module('src.local.butler.run_bot')
+    _setup('pingubot')
+    args = Namespace(config_dir=config_dir, name=name, server_storage_path=server_storage_path, directory=directory, android_serial=android_serial, testing=testing)
+    command.execute(args)
+
+@cli.command()
+@click.option('-t', '--testcase', required=True, help='Testcase URL.')
+@click.option('-b', '--build-dir', required=True, help='Build directory containing the target app and dependencies.')
+@click.option('-i', '--iterations', default=10, help='Number of times to attempt reproduction.')
+@click.option('-dx', '--disable-xvfb', is_flag=True, help='Disable running test case in a virtual frame buffer.')
+@click.option('-da', '--disable-android-setup', is_flag=True, help='Skip Android device setup.')
+@click.option('-v', '--verbose', is_flag=True, help='Print additional log messages.')
+@click.option('-e', '--emulator', is_flag=True, help='Run using the Android emulator.')
+@click.option('-a', '--application', help='Name of the application binary to run.')
+def reproduce(testcase, build_dir, iterations, disable_xvfb, disable_android_setup, verbose, emulator, application):
+    """Reproduce a crash or error from a test case."""
+    command = importlib.import_module('src.local.butler.reproduce')
+    _setup(None)
+    args = Namespace(testcase=testcase, build_dir=build_dir, iterations=iterations, disable_xvfb=disable_xvfb, disable_android_setup=disable_android_setup, verbose=verbose, emulator=emulator, application=application)
+    command.execute(args)
+
+@cli.command()
+@click.option('--skip-install-deps', is_flag=True, help='Skip installing dependencies before running.')
+def run_web(skip_install_deps):
+    """Run the frontend web server."""
+    command = importlib.import_module('src.local.butler.run_web')
+    _setup('frontend')
+    args = Namespace(skip_install_deps=skip_install_deps)
+    command.execute(args)
 
 def _setup(submodule_root=None):
-    """Set up configs and import paths."""
-
+    """Set up import paths."""
     if submodule_root:
         os.environ['ROOT_DIR'] = os.path.abspath(f'./src/{submodule_root}')
     else:
         os.environ['ROOT_DIR'] = os.path.abspath(f'.')
 
     os.environ['PYTHONIOENCODING'] = 'UTF-8'
-
     sys.path.insert(0, os.path.abspath(os.path.join('src')))
-    from src.pingubot.src.bot.system import modules
-    modules.fix_module_search_paths(submodule_root)
+    fix_module_search_paths(submodule_root)
 
 if __name__ == '__main__':
-    main()
+    cli()

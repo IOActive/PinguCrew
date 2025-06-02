@@ -15,8 +15,8 @@
 """reproduce.py reproduces test cases locally."""
 
 import base64
-from src.pingubot.src.bot.config import local_config
-from src.pingubot.src.bot.system import modules
+from pingu_sdk.config import local_config
+from pingu_sdk.system import modules
 
 modules.fix_module_search_paths(submodule_root="pingubot")
 
@@ -24,26 +24,32 @@ import os
 import shutil
 import tempfile
 import time
-from urllib import parse
 
-from src.pingubot.src.bot.utils import json_utils
-from src.pingubot.src.bot.utils  import utils
-from src.pingubot.src.bot import testcase_manager
-from src.pingubot.src.bot.fuzzers import init
+from pingu_sdk.utils import json_utils
+from pingu_sdk.utils  import utils
+from pingu_sdk import testcase_manager
+from pingu_sdk.fuzzers import init
 from src.pingubot.src.bot.tasks import commands
 from src.pingubot.src.bot.tasks import setup
-from src.pingubot.src.bot.build_management import build_manager
-from src.pingubot.src.bot.datastore import data_types
-from src.pingubot.src.bot.system import archive
-from src.pingubot.src.bot.system import environment
-from src.pingubot.src.bot.system import new_process
-from src.pingubot.src.bot.system import shell
-from src.pingubot.src.bot.datastore.data_handler import get_testcase_by_id, get_job, get_crash_by_testcase, get_fuzzer_by_id
+from pingu_sdk.system import archive
+from pingu_sdk.system import environment
+from pingu_sdk.system import new_process
+from pingu_sdk.system import shell
 from local.butler.reproduce_tool import android
-from local.butler.reproduce_tool import config
 from local.butler.reproduce_tool import errors
-from local.butler.reproduce_tool import http_utils
 from local.butler.reproduce_tool import prompts
+from pingu_sdk.datastore.models.fuzz_target import FuzzTarget
+from pingu_sdk.datastore.models.job import Job
+from pingu_sdk.datastore.models.fuzzer import Fuzzer
+from pingu_sdk.datastore.models.testcase import Testcase
+from pingu_sdk.datastore.data_constants import ArchiveStatus
+from pingu_sdk.build_management.build_managers import build_utils
+from pingu_sdk.datastore.pingu_api.client_factory import PinguApiClientFactory as client_factory
+import pingu_sdk.datastore.pingu_api.init as api_client_init
+from pingu_sdk.datastore.pingu_api.testcase_api import TestcaseApi
+from pingu_sdk.datastore.pingu_api.job_api import JobApi
+from pingu_sdk.datastore.pingu_api.crash_api import CrashApi
+from pingu_sdk.datastore.pingu_api.fuzzer_api import FuzzerApi
 
 CONFIG_DIRECTORY = os.path.join(
     os.path.expanduser('~'), '.config', 'bot')
@@ -83,7 +89,7 @@ class SerializedTestcase(object):
     if not self.serialized_fuzz_target:
       return None
 
-    fuzz_target = data_types.FuzzTarget(
+    fuzz_target = FuzzTarget(
         engine=self.serialized_fuzz_target['engine'],
         project=self.serialized_fuzz_target['project'],
         binary=self.serialized_fuzz_target['binary'])
@@ -107,9 +113,9 @@ def prepare_testcase(testcase):
   # Unpack the test case if it's archived.
   # TODO(mbarbella): Rewrite setup.unpack_testcase and share this code.
   if testcase.minimized_keys and testcase.minimized_keys != 'NA':
-    mask = data_types.ArchiveStatus.MINIMIZED
+    mask = ArchiveStatus.MINIMIZED
   else:
-    mask = data_types.ArchiveStatus.FUZZED
+    mask = ArchiveStatus.FUZZED
 
   if testcase.archive_state & mask:
     archive.unpack(testcase_path, testcase_directory)
@@ -181,7 +187,7 @@ def _prepare_initial_environment(build_directory, iterations, verbose):
   _update_directory('src/pingubot/src', 'src/bot')
   _update_directory('configs', 'configs')
   _update_directory('src/pingubot/resources', 'resources')
-  _update_directory('src/pingubot/bot_working_directory','bot_working_directory')
+  _update_directory('src/pingubot/working_directory','working_directory')
 
 
   environment.set_value('CONFIG_DIR_OVERRIDE',
@@ -216,14 +222,14 @@ def _verify_target_exists(build_directory):
   """Ensure that we can find the test target before running it.
 
   Separated into its own function to simplify test behavior."""
-  if not build_manager.check_app_path():
+  if not build_utils.check_app_path():
     raise errors.ReproduceToolUnrecoverableError(
         'Unable to locate app binary in {build_directory}.'.format(
             build_directory=build_directory))
 
 
-def _update_environment_for_testcase(testcase: data_types.Testcase, testcase_related_job: data_types.Job,
-                                     tesetcase_related_fuzzer: data_types.Fuzzer,
+def _update_environment_for_testcase(testcase: Testcase, testcase_related_job: Job,
+                                     tesetcase_related_fuzzer: Fuzzer,
                                      build_directory,
                                      application_override):
   """Update environment variables that depend on the test case."""
@@ -245,7 +251,7 @@ def _update_environment_for_testcase(testcase: data_types.Testcase, testcase_rel
   task_name = environment.get_value('TASK_NAME')
   setup.prepare_environment_for_testcase(testcase, testcase_related_job.id, task_name)
 
-  build_manager.set_environment_vars(
+  build_utils.set_environment_vars(
       [environment.get_value('FUZZER_DIR'), build_directory])
 
   _verify_target_exists(build_directory)
@@ -266,9 +272,12 @@ def _reproduce_crash(testcase_id, build_directory, iterations, disable_xvfb,
 
   # Validate the test case URL and fetch the tool's configuration.
   #configuration = config.ReproduceToolConfiguration(testcase_id)
-  testcase = get_testcase_by_id(testcase_id=testcase_id)
-  testcase_related_job = get_job(job_id=str(testcase.job_id))
-  testcase_raelated_crash = get_crash_by_testcase(testcase_id=str(testcase.id))
+  testcase_api_client = client_factory.get_client(TestcaseApi)
+  testcase = testcase_api_client.get_testcase_by_id(testcase_id=testcase_id)
+  job_api_client = client_factory.get_client(JobApi)
+  testcase_related_job = job_api_client.get_job(job_id=str(testcase.job_id))
+  crash_api_client = client_factory.get_client(CrashApi)
+  testcase_raelated_crash = crash_api_client.get_crash_by_testcase(testcase_id=str(testcase.id))
 
   # For new user uploads, we'll fail without the metadata set by analyze task.
   if not testcase_related_job.platform:
@@ -290,7 +299,8 @@ def _reproduce_crash(testcase_id, build_directory, iterations, disable_xvfb,
           'traces.')
 
   testcase_path = prepare_testcase(testcase)
-  tesetcase_related_fuzzer = get_fuzzer_by_id(testcase.fuzzer_id)
+  fuzzer_api_client = client_factory.get_client(FuzzerApi)
+  tesetcase_related_fuzzer = fuzzer_api_client.get_fuzzer_by_id(testcase.fuzzer_id)
 
   _update_environment_for_testcase(testcase, testcase_related_job, tesetcase_related_fuzzer, build_directory, application)
 
@@ -354,6 +364,10 @@ def execute(args):
   """Attempt to reproduce a crash then report on the result."""
   # Initialize fuzzing engines.
   init.run()
+  
+  # Initialize API clients
+  api_client_init.run(environment.get_value("PINGUAPI_HOST"), environment.get_value("PINGUAPI_KEY"))
+
 
   # Prepare the emulator if needed.
   emulator_process = None

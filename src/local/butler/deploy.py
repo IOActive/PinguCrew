@@ -28,8 +28,8 @@ from local.butler import appengine
 from local.butler import common
 from local.butler import constants
 from local.butler import package
-from src.config import local_config
-from src.pingubot.src.bot.system import environment
+from pingu_sdk.config import local_config
+from pingu_sdk.system import environment
 
 EXPECTED_BOT_COUNT_PERCENT = 0.8
 
@@ -491,7 +491,7 @@ def execute(args):
     else:
         # package.package calls these, so only set these up if we're not packaging,
         # since they can be fairly slow.
-        appengine.symlink_dirs()
+        appengine.sync_dirs()
         common.install_dependencies('linux')
         with open(constants.PACKAGE_TARGET_MANIFEST_PATH, 'w') as f:
             f.write('%s\n' % revision)

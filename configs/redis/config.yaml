@@ -1,4 +1,8 @@
-resources:
+env:
+  QUEUE_HOST: queue
+  CELERY_BROKER_URL: amqp://queue
+
+queues:
   - name: jobs-linux
 
   - name: high-end-jobs-linux

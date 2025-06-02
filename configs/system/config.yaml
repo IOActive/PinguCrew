@@ -1,0 +1,13 @@
+env:
+  # Django Backend SECRET_KEY
+  SECRET_KEY: XXXXXX
+
+  # Django Configuration
+  BACKEND_HOST: 0.0.0.0
+  BACKEND_PORT: 8086
+
+admin:
+  username: admin # CHANGE IT !!!
+  password: admin # CHANGE IT !!!
+  email: admin@admin.com # CHANGE IT !!! 
+

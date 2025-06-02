@@ -1,3 +1,0 @@
-env:
-  QUEUE_HOST: 'queue'
-  CELERY_BROKER_URL: 'amqp://queue'

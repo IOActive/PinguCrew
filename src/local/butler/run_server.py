@@ -16,118 +16,74 @@
 """run_server.py run the Clusterfuzz server locally."""
 import os
 import shlex
-import shutil
+import sys
 import threading
 import time
-import urllib.request
-
-from pingubot.src.bot.config import local_config
+import pika
 from src.local.butler import appengine
 from src.local.butler import common
 from src.local.butler import constants
-from pingubot.src.bot.datastore.storage import MinioProvider
-
-
-def bootstrap_db():
-  """Bootstrap the DB."""
-
-  def bootstrap():
-    # Wait for the server to run.
-    time.sleep(10)
-    print('Bootstrapping datastore...')
-    command_line = f'python butler.py run setup --non-dry-run --local --config-dir={constants.TEST_CONFIG_DIR}'
-    command = shlex.split(command_line, posix=True)
-
-    common.execute(
-        command=command,
-        exit_on_error=False)
-
-  thread = threading.Thread(target=bootstrap)
-  thread.start()
-
-def create_backend_admin_account(config):
-      # Django run server command
-    command_line = f"python manage.py createsuperuser --username {config.get('env.BACKEND_SUPERUSER')} --settings PinguBackend.settings.development"
-    command = shlex.split(command_line, posix=True)
-
-    common.execute(
-      command,
-      cwd=os.environ['ROOT_DIR']
-    )
-
-def create_minio_bucket(provider, name):
-  """Create a local bucket."""
-  try:
-      provider.create_bucket(name)
-  except Exception as e:
-      print(f'{e}')
-
-
-def bootstrap_buckets(config):
-  """Bootstrap GCS."""
-  test_blobs_bucket = os.environ.get('TEST_BLOBS_BUCKET')
-  provider = MinioProvider()
-  
-  if test_blobs_bucket:
-    create_minio_bucket(provider, test_blobs_bucket)
-  else:
-    create_minio_bucket(provider, config.get('blobs.bucket'))
-
-  create_minio_bucket(provider, config.get('deployment.bucket'))
-  create_minio_bucket(provider, config.get('bigquery.bucket'))
-  create_minio_bucket(provider, config.get('backup.bucket'))
-  create_minio_bucket(provider, config.get('logs.fuzzer.bucket'))
-  create_minio_bucket(provider, config.get('env.CORPUS_BUCKET'))
-  create_minio_bucket(provider, config.get('env.QUARANTINE_BUCKET'))
-  create_minio_bucket(provider, config.get('env.SHARED_CORPUS_BUCKET'))
-  create_minio_bucket(provider, config.get('env.FUZZ_LOGS_BUCKET'))
-  create_minio_bucket(provider, config.get('env.FUZZERS_BUCKET'))
-  create_minio_bucket(provider, config.get('env.RELEASE_BUILD_BUCKET'))
-  create_minio_bucket(provider, config.get('env.SYM_RELEASE_BUILD_BUCKET'))
-  create_minio_bucket(provider, config.get('env.SYM_DEBUG_BUILD_BUCKET'))
-  create_minio_bucket(provider, config.get('env.STABLE_BUILD_BUCKET'))
-  create_minio_bucket(provider, config.get('env.BETA_BUILD_BUCKET'))
 
 
 def execute(args):
   """Run the server."""
-  #os.environ['LOCAL_DEVELOPMENT'] = 'True'
-
   if not args.skip_install_deps:
     common.install_dependencies(packages=["backend"], )
 
   # Do this everytime as a past deployment might have changed these.
-  appengine.symlink_dirs(src_dir_py=os.path.join('src', 'backend'))
+  appengine.sync_dirs(src_dir_py=os.path.join('src', 'backend'), sub_configs=['redis', 'system', 'database', 'minio'])
 
   # TODO: Clean DB and Butckets if needed.
   #if args.bootstrap or args.clean:
-
-  config = local_config.ProjectConfig()
-
-  config.set_environment()
+  os.chdir(os.environ['ROOT_DIR'])
+  from src.backend.src.bootstrap import bootstrap_db, create_admin_user, load_initial_data, bootstrap_queues
+  _redis_config = bootstrap_queues.load_config()
+  _db_config = bootstrap_db.load_config()
+  _system_admin_config = create_admin_user.load_config()
 
   # Shout down all dockers to ensure everything starts correctly
-  common.execute(['/bin/bash', '-c', 'docker-compose down'])
+  common.execute(
+    command=['/bin/bash', '-c', 'docker-compose down database queue minio'],
+    cwd=os.environ['ROOT_DIR'])
 
   # Run Bucket server, redis and mongo DB
-  common.execute(['/bin/bash', '-c', 'docker-compose up --no-log-prefix -d database queue minio'])
-  time.sleep(5)
+  common.execute(
+    command=['/bin/bash', '-c', 'docker-compose up database queue minio --no-log-prefix -d'],
+    cwd=os.environ['ROOT_DIR'])
+  
   if args.bootstrap:
-    create_backend_admin_account(config)
-    # Set up local buckets and symlinks.
-    bootstrap_buckets(config)
-    bootstrap_db()
+    time.sleep(10)
+    # Boostrap DB
+    bootstrap_db.create_databases(_db_config)
+    bootstrap_db.apply_migrations()
+    # Boosttrap Queues
+    bootstrap_queues.setup_queues(_redis_config)
+    # Boostrap super user
+    create_admin_user.create_admin_user(_system_admin_config)
+    # Boostrap default DB data
+    load_initial_data.setup_templates()
+    load_initial_data.setup_fuzzers()
+    
+    
 
   os.environ['APPLICATION_ID'] = constants.TEST_APP_ID
   os.environ['LOCAL_DEVELOPMENT'] = 'True'
   os.environ['PINGU_ENV'] = 'dev'
   try:
     # Django run server command
-    command_line = f"python manage.py runserver {constants.DEV_APPSERVER_PORT} --settings PinguBackend.settings.development"
+    command_line = f"python manage.py runserver --settings PinguBackend.settings.development"
     command = shlex.split(command_line, posix=True)
 
     common.execute(
       command,
+      cwd=os.environ['ROOT_DIR']
+    )
+    
+    # Celery async beat and worker
+    celery_command = f"./celery_runner.sh"
+    
+    common.execute(
+      celery_command,
       cwd=os.environ['ROOT_DIR']
     )
     

@@ -1,0 +1,16 @@
+env:
+  # Minio Backend Server Host
+  MINIO_HOST: minio
+  MINIO_API_PORT: 9000
+  MINIO_WEB_PORT: 9001
+
+  # Minio access key
+  MINIO_ACCESS_KEY: GENERATED MANUALLY IN THE MINIO PANEL
+  MINIO_SECRET_KEY: GENERATED MANUALLY IN THE MINIO PANEL
+
+  # Minio Root user and password
+  MINIO_ROOT_USER: minioadmin # CHANGE IT !!! 
+  MINIO_ROOT_PASSWORD: minioadmin # CHANGE IT !!! 
+
+  # Mino storage path
+  LOCAL_STORAGE_PATH: ~/mounting_point/
